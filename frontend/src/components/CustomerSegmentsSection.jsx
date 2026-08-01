@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { RotateCcw, Users, UserX, Percent, ShieldCheck } from 'lucide-react';
+import { loadStaticCsvCustomers } from '../utils/csvLoader';
 
 export default function CustomerSegmentsSection() {
   const [cohortData, setCohortData] = useState([]);
@@ -15,7 +16,10 @@ export default function CustomerSegmentsSection() {
 
   useEffect(() => {
     fetch('/api/customers?limit=25000')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error("Offline or static deployment");
+        return res.json();
+      })
       .then(data => {
         if (data.customers && data.customers.length > 0) {
           const mapped = data.customers.map(c => ({
@@ -32,11 +36,28 @@ export default function CustomerSegmentsSection() {
             monthlyCharges: c.monthly_charges
           }));
           setCohortData(mapped);
+          setLoading(false);
+        } else {
+          throw new Error("Empty API response");
         }
-        setLoading(false);
       })
-      .catch(err => {
-        console.warn("Could not fetch 25k customers for segments section:", err);
+      .catch(async () => {
+        // Fallback for Vercel deployment: load directly from public CSV
+        const csvCustomers = await loadStaticCsvCustomers();
+        const mapped = csvCustomers.map(c => ({
+          id: c.customerid,
+          name: c['customer name'],
+          state: c.state,
+          gender: c.gender,
+          plan: c.plan_type,
+          contract: c.contract_type,
+          churn: c.churn_flag,
+          escalations: c.escalations,
+          churnScore: c.churn_score,
+          risk: c.risk_level ? c.risk_level.toLowerCase() : 'low',
+          monthlyCharges: c.monthly_charges
+        }));
+        setCohortData(mapped);
         setLoading(false);
       });
   }, []);

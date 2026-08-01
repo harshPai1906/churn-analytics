@@ -1,37 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { ShieldAlert, AlertTriangle } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
-
-const fallbackData = {
-  summary: {
-    high_risk_count: 6700,
-    high_risk_revenue_at_risk: 48200,
-    avg_high_risk_prob: 82.3,
-    medium_risk_count: 9800
-  },
-  priority_customers: [
-    { customerid: '0023-UYUPN', 'customer name': 'lalita', plan_type: 'Standard', state: 'Meghalaya', monthly_charges: 94.05, churn_probability: 85, revenue_at_risk: 959.3, recommended_action: 'Assign Dedicated Account Manager & schedule emergency call.' },
-    { customerid: '0013-EXCHZ', 'customer name': 'mira', plan_type: 'Basic', state: 'Delhi', monthly_charges: 17.79, churn_probability: 91, revenue_at_risk: 194.2, recommended_action: 'Provide 25% Contract Renewal Discount & Loyalty Incentive.' },
-    { customerid: '0020-JDNXP', 'customer name': 'mina', plan_type: 'Premium', state: 'Delhi', monthly_charges: 23.10, churn_probability: 72, revenue_at_risk: 199.6, recommended_action: 'Assign Dedicated Account Manager & schedule emergency call.' },
-    { customerid: '0022-TCJCI', 'customer name': 'parvati', plan_type: 'Basic', state: 'Rajasthan', monthly_charges: 20.01, churn_probability: 82, revenue_at_risk: 196.9, recommended_action: 'Trigger Priority Technical Support & Executive Outreach.' },
-    { customerid: '0014-BMAQU', 'customer name': 'rishabh', plan_type: 'Standard', state: 'Maharashtra', monthly_charges: 13.37, churn_probability: 88, revenue_at_risk: 141.3, recommended_action: 'Trigger Priority Technical Support & Executive Outreach.' },
-    { customerid: '0011-IGKFF', 'customer name': 'raghav', plan_type: 'Basic', state: 'Uttar Pradesh', monthly_charges: 14.21, churn_probability: 78, revenue_at_risk: 132.9, recommended_action: 'Enroll in Annual Contract Migration & 1-on-1 Training.' }
-  ],
-  risk_by_subscription: [
-    { plan: 'Basic', high_risk: 2800, med_risk: 2500, low_risk: 2200 },
-    { plan: 'Standard', high_risk: 2400, med_risk: 4200, low_risk: 3900 },
-    { plan: 'Premium', high_risk: 1500, med_risk: 3100, low_risk: 2400 }
-  ],
-  risk_by_geography: [
-    { location: 'Delhi', revenue_at_risk: 8500 },
-    { location: 'Maharashtra', revenue_at_risk: 7800 },
-    { location: 'Karnataka', revenue_at_risk: 7200 },
-    { location: 'Uttar Pradesh', revenue_at_risk: 6900 }
-  ]
-};
+import { loadStaticCsvCustomers } from '../utils/csvLoader';
 
 export default function RiskAnalysisView({ onSelectCustomer }) {
-  const [data, setData] = useState(fallbackData);
+  const [data, setData] = useState({
+    summary: { high_risk_count: 0, high_risk_revenue_at_risk: 0, avg_high_risk_prob: 0, medium_risk_count: 0 },
+    priority_customers: [],
+    risk_by_subscription: [],
+    risk_by_geography: []
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,12 +19,59 @@ export default function RiskAnalysisView({ onSelectCustomer }) {
         return res.json();
       })
       .then(d => {
-        setData(d);
-        setLoading(false);
+        if (d.summary) {
+          setData(d);
+          setLoading(false);
+        } else {
+          throw new Error("Invalid API structure");
+        }
       })
-      .catch(err => {
-        console.warn("Using fallback risk analysis cohort data:", err);
-        setData(fallbackData);
+      .catch(async (err) => {
+        console.warn("API offline, computing risk analysis from static CSV:", err);
+        const allCsv = await loadStaticCsvCustomers();
+        const highRisk = allCsv.filter(c => c.risk_level === 'HIGH');
+        const medRisk = allCsv.filter(c => c.risk_level === 'MEDIUM');
+        const lowRisk = allCsv.filter(c => c.risk_level === 'LOW');
+
+        const totalHighRevRisk = highRisk.reduce((sum, c) => sum + (c.revenue_at_risk || 0), 0);
+        const avgHighProb = highRisk.length > 0 ? (highRisk.reduce((sum, c) => sum + (c.churn_probability || 0), 0) / highRisk.length).toFixed(1) : 0;
+
+        const priorityTop = [...highRisk].sort((a, b) => b.revenue_at_risk - a.revenue_at_risk).slice(0, 15);
+
+        // Subscription breakdown
+        const plans = ['Basic', 'Standard', 'Premium'];
+        const riskBySub = plans.map(p => {
+          const subSet = allCsv.filter(c => c.plan_type === p);
+          return {
+            plan: p,
+            high_risk: subSet.filter(c => c.risk_level === 'HIGH').length,
+            med_risk: subSet.filter(c => c.risk_level === 'MEDIUM').length,
+            low_risk: subSet.filter(c => c.risk_level === 'LOW').length,
+            revenue_at_risk: Math.round(subSet.reduce((sum, c) => sum + (c.revenue_at_risk || 0), 0))
+          };
+        });
+
+        // Geo breakdown
+        const states = [...new Set(allCsv.map(c => c.state))].filter(Boolean);
+        const riskByGeo = states.map(st => {
+          const stSet = allCsv.filter(c => c.state === st);
+          return {
+            location: st,
+            revenue_at_risk: Math.round(stSet.reduce((sum, c) => sum + (c.revenue_at_risk || 0), 0))
+          };
+        }).sort((a, b) => b.revenue_at_risk - a.revenue_at_risk);
+
+        setData({
+          summary: {
+            high_risk_count: highRisk.length,
+            high_risk_revenue_at_risk: Math.round(totalHighRevRisk),
+            avg_high_risk_prob: Number(avgHighProb),
+            medium_risk_count: medRisk.length
+          },
+          priority_customers: priorityTop,
+          risk_by_subscription: riskBySub,
+          risk_by_geography: riskByGeo
+        });
         setLoading(false);
       });
   }, []);
@@ -71,7 +96,7 @@ export default function RiskAnalysisView({ onSelectCustomer }) {
         <div className="p-4 rounded-xl bg-[#FFFFFF] border border-[#F5CBCB] shadow-sm">
           <span className="text-xs font-bold text-[#7A5C77]">Total High-Risk Accounts</span>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-black text-[#E65B7B]">{summary.high_risk_count?.toLocaleString()}</span>
+            <span className="text-2xl font-black text-[#E65B7B]">{loading ? '...' : summary.high_risk_count?.toLocaleString()}</span>
             <span className="text-[10px] font-bold text-[#E65B7B] font-mono">Prob &ge; 70%</span>
           </div>
         </div>
@@ -79,7 +104,7 @@ export default function RiskAnalysisView({ onSelectCustomer }) {
         <div className="p-4 rounded-xl bg-[#FFFFFF] border border-[#F5CBCB] shadow-sm">
           <span className="text-xs font-bold text-[#7A5C77]">High-Risk Revenue Exposure</span>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-black text-[#E65B7B]">₹{(summary.high_risk_revenue_at_risk / 1000).toFixed(1)}K</span>
+            <span className="text-2xl font-black text-[#E65B7B]">₹{loading ? '...' : (summary.high_risk_revenue_at_risk / 1000).toFixed(1)}K</span>
             <span className="text-[10px] font-bold text-[#E69537] font-mono">Annual ARR</span>
           </div>
         </div>
@@ -87,7 +112,7 @@ export default function RiskAnalysisView({ onSelectCustomer }) {
         <div className="p-4 rounded-xl bg-[#FFFFFF] border border-[#F5CBCB] shadow-sm">
           <span className="text-xs font-bold text-[#7A5C77]">Avg High-Risk Churn Prob</span>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-black text-[#2D1E2F]">{summary.avg_high_risk_prob}%</span>
+            <span className="text-2xl font-black text-[#2D1E2F]">{loading ? '...' : `${summary.avg_high_risk_prob}%`}</span>
             <span className="text-[10px] font-bold text-[#7A5C77]">Target Cohort</span>
           </div>
         </div>
@@ -95,7 +120,7 @@ export default function RiskAnalysisView({ onSelectCustomer }) {
         <div className="p-4 rounded-xl bg-[#FFFFFF] border border-[#F5CBCB] shadow-sm">
           <span className="text-xs font-bold text-[#7A5C77]">Medium Risk Buffer</span>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-black text-[#E69537]">{summary.medium_risk_count?.toLocaleString()}</span>
+            <span className="text-2xl font-black text-[#E69537]">{loading ? '...' : summary.medium_risk_count?.toLocaleString()}</span>
             <span className="text-[10px] font-bold text-[#E69537] font-mono">31-70% Risk</span>
           </div>
         </div>
@@ -128,7 +153,11 @@ export default function RiskAnalysisView({ onSelectCustomer }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F5CBCB]/60 font-medium">
-              {priority_customers.map((c, idx) => (
+              {loading ? (
+                <tr>
+                  <td colSpan="8" className="p-8 text-center text-[#7A5C77]">Loading 25,000 risk cohort...</td>
+                </tr>
+              ) : priority_customers.map((c, idx) => (
                 <tr
                   key={`${c.customerid}-${idx}`}
                   onClick={() => onSelectCustomer && onSelectCustomer(c.customerid)}

@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, ShieldAlert, Heart, CreditCard, AlertTriangle, ArrowUpRight, UserCheck } from 'lucide-react';
-
-const fallbackCustomerLookup = {
-  '0020-JDNXP': { customerid: '0020-JDNXP', 'customer name': 'mina', plan_type: 'Premium', state: 'Delhi', country: 'India', contract_type: 'Annual', monthly_charges: 23.10, cltv: 1610, churn_score: 8, churn_probability: 72, risk_level: 'HIGH', health_score: 42, revenue_at_risk: 199.6, recommended_action: 'Assign Dedicated Account Manager & schedule emergency call.', escalations: 'Y', csat_score: 28.83, complaint_count: 0.99, cancellation_reason: 'Switched to competitor', subscription_type: 'Organic', gender: 'Female', dob: '23-11-1995' },
-  '0013-EXCHZ': { customerid: '0013-EXCHZ', 'customer name': 'mira', plan_type: 'Basic', state: 'Delhi', country: 'India', contract_type: 'Monthly', monthly_charges: 17.79, cltv: 550, churn_score: 79, churn_probability: 91, risk_level: 'HIGH', health_score: 15, revenue_at_risk: 194.2, recommended_action: 'Provide 25% Contract Renewal Discount & Loyalty Incentive.', escalations: 'N', csat_score: 42.15, complaint_count: 1.45, cancellation_reason: 'Too expensive', subscription_type: 'Paid', gender: 'Female', dob: '15-03-1990' },
-  '0003-MKNFE': { customerid: '0003-MKNFE', 'customer name': 'mohan', plan_type: 'Standard', state: 'Rajasthan', country: 'India', contract_type: 'Monthly', monthly_charges: 10.59, cltv: 335, churn_score: 3, churn_probability: 68, risk_level: 'MEDIUM', health_score: 48, revenue_at_risk: 86.3, recommended_action: 'Priority Customer Support follow-up on unresolved escalations.', escalations: 'Y', csat_score: 55.20, complaint_count: 1.12, cancellation_reason: 'Poor streaming quality', subscription_type: 'Refferal', gender: 'Male', dob: '08-07-1988' }
-};
+import { loadStaticCsvCustomers } from '../utils/csvLoader';
 
 export default function CustomerDetailModal({ customerId, onClose }) {
   const [customer, setCustomer] = useState(null);
@@ -21,35 +16,22 @@ export default function CustomerDetailModal({ customerId, onClose }) {
         return res.json();
       })
       .then(data => {
-        setCustomer(data);
-        setLoading(false);
+        if (data.customerid) {
+          setCustomer(data);
+          setLoading(false);
+        } else {
+          throw new Error("Invalid customer detail response");
+        }
       })
-      .catch(err => {
-        // Fallback customer detail object
-        const local = fallbackCustomerLookup[customerId] || {
-          customerid: customerId,
-          'customer name': 'Customer',
-          plan_type: 'Standard',
-          state: 'India',
-          country: 'India',
-          contract_type: 'Monthly',
-          monthly_charges: 20.0,
-          cltv: 640,
-          churn_score: 34,
-          churn_probability: 50,
-          risk_level: 'MEDIUM',
-          health_score: 55,
-          revenue_at_risk: 120.0,
-          recommended_action: 'Initiate Automated Health Check & Feedback Survey.',
-          escalations: 'N',
-          csat_score: 50.0,
-          complaint_count: 1.0,
-          cancellation_reason: 'Too expensive',
-          subscription_type: 'Organic',
-          gender: 'Male',
-          dob: '01-01-1990'
-        };
-        setCustomer(local);
+      .catch(async () => {
+        // Fallback for static Vercel deployment
+        const allCsv = await loadStaticCsvCustomers();
+        const found = allCsv.find(c => c.customerid === customerId);
+        if (found) {
+          setCustomer(found);
+        } else {
+          setCustomer(allCsv[0] || null);
+        }
         setLoading(false);
       });
   }, [customerId]);

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, X, Filter, RotateCcw } from 'lucide-react';
+import { loadStaticCsvCustomers } from '../utils/csvLoader';
 
 export default function CustomersView({ onSelectCustomer }) {
   const [customers, setCustomers] = useState([]);
@@ -36,17 +37,75 @@ export default function CustomersView({ onSelectCustomer }) {
     });
 
     fetch(`/api/customers?${params.toString()}`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error("API Offline");
+        return res.json();
+      })
       .then(data => {
-        if (data.customers) {
+        if (data.customers && data.customers.length >= 0) {
           setCustomers(data.customers);
           setTotalCount(data.total || 0);
           setTotalPages(data.total_pages || 1);
+          setLoading(false);
+        } else {
+          throw new Error("Invalid API response format");
         }
-        setLoading(false);
       })
-      .catch(err => {
-        console.warn("API Error, fallback customer data used:", err);
+      .catch(async () => {
+        // Fallback for Vercel static deployment: load and filter CSV directly in browser
+        const allCsv = await loadStaticCsvCustomers();
+        let filtered = [...allCsv];
+
+        // Search
+        if (search.trim()) {
+          const s = search.toLowerCase().trim();
+          filtered = filtered.filter(c =>
+            (c['customer name'] && c['customer name'].toLowerCase().includes(s)) ||
+            (c.customerid && c.customerid.toLowerCase().includes(s))
+          );
+        }
+
+        // Risk filter
+        if (risk !== 'ALL') {
+          filtered = filtered.filter(c => c.risk_level === risk.toUpperCase());
+        }
+
+        // Plan filter
+        if (plan !== 'ALL') {
+          filtered = filtered.filter(c => c.plan_type === plan);
+        }
+
+        // Contract filter
+        if (contract !== 'ALL') {
+          filtered = filtered.filter(c => c.contract_type === contract);
+        }
+
+        // State filter
+        if (stateFilter !== 'ALL') {
+          filtered = filtered.filter(c => c.state === stateFilter);
+        }
+
+        // Sorting
+        filtered.sort((a, b) => {
+          let valA = a[sortBy];
+          let valB = b[sortBy];
+
+          if (typeof valA === 'string') valA = valA.toLowerCase();
+          if (typeof valB === 'string') valB = valB.toLowerCase();
+
+          if (valA < valB) return order === 'asc' ? -1 : 1;
+          if (valA > valB) return order === 'asc' ? 1 : -1;
+          return 0;
+        });
+
+        const total = filtered.length;
+        const pages = Math.ceil(total / limit) || 1;
+        const start = (page - 1) * limit;
+        const end = start + limit;
+
+        setCustomers(filtered.slice(start, end));
+        setTotalCount(total);
+        setTotalPages(pages);
         setLoading(false);
       });
   }, [search, risk, plan, contract, stateFilter, sortBy, order, page, limit]);
@@ -55,7 +114,6 @@ export default function CustomersView({ onSelectCustomer }) {
     fetchCustomers();
   }, [fetchCustomers]);
 
-  // Reset page to 1 when filters or search change
   const handleFilterChange = (setter, value) => {
     setter(value);
     setPage(1);
@@ -85,7 +143,6 @@ export default function CustomersView({ onSelectCustomer }) {
   const startRecord = totalCount === 0 ? 0 : (page - 1) * limit + 1;
   const endRecord = Math.min(page * limit, totalCount);
 
-  // Generate page numbers array for pagination bar
   const getPageNumbers = () => {
     const pages = [];
     const maxVisible = 5;
