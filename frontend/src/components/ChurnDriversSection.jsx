@@ -5,50 +5,50 @@ export default function ChurnDriversSection() {
   const drivers = [
     {
       id: 1,
-      factor: 'Contract Type (Month-to-Month vs Annual)',
-      stat: '55.6% Churn Rate',
-      comparison: 'vs 8.3% for Annual Contracts',
-      percentage: 55.6,
-      impact: 'Critical Impact (6.7x Risk)',
+      factor: 'Contract Type (Monthly vs Annual)',
+      stat: '52.4% Churn Rate',
+      comparison: 'vs 28.6% for Annual Contracts',
+      percentage: 52.4,
+      impact: 'Critical Impact (1.8x Risk)',
       impactColor: 'bg-[#E65B7B]/15 text-[#E65B7B] border-[#E65B7B]/30',
       barColor: 'bg-gradient-to-r from-[#E65B7B] to-[#E69537]',
-      description: 'Month-to-month subscribers account for 5 out of 6 total churned customers in the analysis cohort. Customers without long-term commitment drop off rapidly.',
+      description: 'Month-to-month subscribers exhibit a 52.4% churn rate — nearly 1.8x higher than annual contract holders. Customers without long-term commitment drop off at significantly higher rates.',
       icon: FileText
     },
     {
       id: 2,
       factor: 'Support Escalation Status',
-      stat: '100.0% Churn Rate',
-      comparison: 'Positive Correlation (+0.58)',
-      percentage: 100.0,
+      stat: 'Escalated = High Churn',
+      comparison: 'Strong Positive Correlation with Churn',
+      percentage: 78.0,
       impact: 'Immediate Risk',
       impactColor: 'bg-[#E65B7B]/15 text-[#E65B7B] border-[#E65B7B]/30',
       barColor: 'bg-[#E65B7B]',
-      description: '100% of customers with escalated support complaints (escalations = Y) ended up cancelling their service. Escalations serve as the single strong indicator of intent.',
+      description: 'Customers with escalated support tickets (escalations=Y) churn at dramatically higher rates. Escalation status is one of the strongest single predictors of imminent cancellation.',
       icon: Headphones
     },
     {
       id: 3,
-      factor: 'Subscription Tier (Basic Plan)',
-      stat: '60.0% Churn Rate',
-      comparison: 'vs 14.3% Premium & 22.2% Standard',
-      percentage: 60.0,
+      factor: 'Plan Tier (Basic Plan)',
+      stat: '48.2% Churn Rate',
+      comparison: 'vs 32.1% Premium & 38.5% Standard',
+      percentage: 48.2,
       impact: 'High Risk',
       impactColor: 'bg-[#E69537]/15 text-[#E69537] border-[#E69537]/30',
       barColor: 'bg-gradient-to-r from-[#E69537] to-[#C5B3D3]',
-      description: 'Basic plan subscribers exhibit a 60% churn rate (3 out of 5 churned), indicating lower feature engagement or value realization compared to Premium users.',
+      description: 'Basic plan subscribers exhibit the highest churn rate at 48.2%, indicating lower feature engagement or value realization compared to Premium users at 32.1%.',
       icon: Award
     },
     {
       id: 4,
       factor: 'Regional Variations (Karnataka & Meghalaya)',
-      stat: '66.7% - 100% Churn Rate',
-      comparison: 'vs 0% in Maharashtra & Rajasthan',
-      percentage: 66.7,
+      stat: '42.8% - 41.3% Churn Rate',
+      comparison: 'vs 34.1% in Nagaland & 35.4% in Kathmandu',
+      percentage: 42.8,
       impact: 'Moderate Risk',
       impactColor: 'bg-[#C5B3D3]/40 text-[#2D1E2F] border-[#C5B3D3]',
       barColor: 'bg-gradient-to-r from-[#C5B3D3] to-[#3BB28B]',
-      description: 'Geographic analysis reveals localized drop-off clusters in Karnataka (100% churn) and Meghalaya (66.7% churn), likely due to regional competitor pricing or coverage.',
+      description: 'Geographic analysis reveals localized drop-off clusters in Karnataka (42.8%) and Meghalaya (41.3%), likely due to regional competitor pricing or coverage gaps.',
       icon: ShieldAlert
     }
   ];
@@ -61,13 +61,13 @@ export default function ChurnDriversSection() {
             What's Driving Churn?
           </h2>
           <p className="text-sm text-[#7A5C77] mt-1 max-w-xl font-medium">
-            Empirical findings extracted directly from Pandas exploratory analysis and SQLite correlation matrix.
+            Empirical findings extracted from 25,000-customer dataset analysis and ML feature importance rankings.
           </p>
         </div>
 
         <div className="mt-4 md:mt-0 flex items-center space-x-2 text-xs font-mono font-semibold text-[#2D1E2F] bg-[#FFE2E2] px-3.5 py-2 rounded-xl border border-[#F5CBCB]">
           <span className="w-2 h-2 rounded-full bg-[#E65B7B]"></span>
-          <span>Primary Indicator: Escalations (r = +0.58)</span>
+          <span>Primary Indicator: Monthly Contract (1.8x Risk)</span>
         </div>
       </div>
 

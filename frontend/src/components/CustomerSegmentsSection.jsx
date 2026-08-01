@@ -1,31 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { RotateCcw, Users, UserX, Percent, ShieldCheck } from 'lucide-react';
 
-const cohortData = [
-  { id: '0002-ORFBO', name: 'keshav', state: 'Maharashtra', gender: 'Male', plan: 'Basic', contract: 'Monthly', churn: 0, escalations: 'N', churnScore: 35, risk: 'low', monthlySpend: 15.5 },
-  { id: '0003-MKNFE', name: 'raghav', state: 'Karnataka', gender: 'Male', plan: 'Basic', contract: 'Monthly', churn: 1, escalations: 'Y', churnScore: 82, risk: 'high', monthlySpend: 19.8 },
-  { id: '0004-TLHLJ', name: 'lalita', state: 'Delhi', gender: 'Female', plan: 'Basic', contract: 'Monthly', churn: 1, escalations: 'Y', churnScore: 78, risk: 'high', monthlySpend: 20.1 },
-  { id: '0011-IGKFF', name: 'mohan', state: 'Nagaland', gender: 'Male', plan: 'Premium', contract: 'Annual', churn: 0, escalations: 'N', churnScore: 22, risk: 'low', monthlySpend: 45.0 },
-  { id: '0013-EXCHZ', name: 'mira', state: 'Delhi', gender: 'Female', plan: 'Basic', contract: 'Monthly', churn: 1, escalations: 'Y', churnScore: 91, risk: 'high', monthlySpend: 18.2 },
-  { id: '0014-CBKSB', name: 'rohit', state: 'Maharashtra', gender: 'Male', plan: 'Standard', contract: 'Annual', churn: 0, escalations: 'N', churnScore: 41, risk: 'low', monthlySpend: 29.5 },
-  { id: '0015-UOANM', name: 'ananya', state: 'Karnataka', gender: 'Female', plan: 'Basic', contract: 'Monthly', churn: 1, escalations: 'Y', churnScore: 88, risk: 'high', monthlySpend: 17.9 },
-  { id: '0016-FBBAZ', name: 'priya', state: 'Meghalaya', gender: 'Female', plan: 'Standard', contract: 'Monthly', churn: 1, escalations: 'Y', churnScore: 75, risk: 'high', monthlySpend: 31.0 },
-  { id: '0017-WMJ12', name: 'aditya', state: 'Telangana', gender: 'Male', plan: 'Standard', contract: 'Monthly', churn: 1, escalations: 'Y', churnScore: 79, risk: 'high', monthlySpend: 33.2 },
-  { id: '0018-BSZGE', name: 'neha', state: 'Meghalaya', gender: 'Female', plan: 'Premium', contract: 'Annual', churn: 0, escalations: 'N', churnScore: 28, risk: 'low', monthlySpend: 52.0 },
-  { id: '0019-YOZ99', name: 'vikram', state: 'Meghalaya', gender: 'Male', plan: 'Standard', contract: 'Monthly', churn: 0, escalations: 'N', churnScore: 48, risk: 'low', monthlySpend: 28.0 },
-  { id: '0020-FUPRO', name: 'simran', state: 'Uttar Pradesh', gender: 'Female', plan: 'Premium', contract: 'Annual', churn: 0, escalations: 'N', churnScore: 19, risk: 'low', monthlySpend: 49.0 },
-  { id: '0021-AVJPB', name: 'tarun', state: 'Uttar Pradesh', gender: 'Male', plan: 'Standard', contract: 'Annual', churn: 0, escalations: 'N', churnScore: 33, risk: 'low', monthlySpend: 27.5 },
-  { id: '0022-[#K23', name: 'divya', state: 'Rajasthan', gender: 'Female', plan: 'Premium', contract: 'Annual', churn: 0, escalations: 'N', churnScore: 15, risk: 'low', monthlySpend: 55.0 },
-  { id: '0023-VZP23', name: 'kavita', state: 'Rajasthan', gender: 'Female', plan: 'Standard', contract: 'Annual', churn: 0, escalations: 'N', churnScore: 38, risk: 'low', monthlySpend: 30.0 },
-  { id: '0024-[#V92', name: 'sanjay', state: 'Telangana', gender: 'Male', plan: 'Premium', contract: 'Annual', churn: 0, escalations: 'N', churnScore: 24, risk: 'low', monthlySpend: 48.5 },
-  { id: '0025-[#X01', name: 'pooja', state: 'Kathmandu', gender: 'Female', plan: 'Standard', contract: 'Annual', churn: 0, escalations: 'N', churnScore: 30, risk: 'low', monthlySpend: 26.0 },
-  { id: '0026-[#Y02', name: 'amit', state: 'Kathmandu', gender: 'Male', plan: 'Premium', contract: 'Annual', churn: 0, escalations: 'N', churnScore: 21, risk: 'low', monthlySpend: 50.0 },
-  { id: '0027-[#Z03', name: 'sneha', state: 'Delhi', gender: 'Female', plan: 'Standard', contract: 'Annual', churn: 0, escalations: 'N', churnScore: 31, risk: 'low', monthlySpend: 32.0 },
-  { id: '0028-[#A04', name: 'rahul', state: 'Delhi', gender: 'Male', plan: 'Premium', contract: 'Monthly', churn: 0, escalations: 'N', churnScore: 44, risk: 'low', monthlySpend: 46.0 },
-  { id: '0029-[#B05', name: 'swati', state: 'Maharashtra', gender: 'Female', plan: 'Standard', contract: 'Annual', churn: 0, escalations: 'N', churnScore: 27, risk: 'low', monthlySpend: 29.0 }
-];
-
 export default function CustomerSegmentsSection() {
+  const [cohortData, setCohortData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const [filters, setFilters] = useState({
     contract: 'All',
     plan: 'All',
@@ -33,6 +12,34 @@ export default function CustomerSegmentsSection() {
     escalations: 'All',
     risk: 'All'
   });
+
+  useEffect(() => {
+    fetch('/api/customers?limit=25000')
+      .then(res => res.json())
+      .then(data => {
+        if (data.customers && data.customers.length > 0) {
+          const mapped = data.customers.map(c => ({
+            id: c.customerid,
+            name: c['customer name'],
+            state: c.state,
+            gender: c.gender,
+            plan: c.plan_type,
+            contract: c.contract_type,
+            churn: c.churn_flag,
+            escalations: c.escalations,
+            churnScore: c.churn_score,
+            risk: c.risk_level ? c.risk_level.toLowerCase() : 'low',
+            monthlyCharges: c.monthly_charges
+          }));
+          setCohortData(mapped);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.warn("Could not fetch 25k customers for segments section:", err);
+        setLoading(false);
+      });
+  }, []);
 
   const resetFilters = () => {
     setFilters({
@@ -53,7 +60,7 @@ export default function CustomerSegmentsSection() {
       if (filters.risk !== 'All' && item.risk !== filters.risk) return false;
       return true;
     });
-  }, [filters]);
+  }, [filters, cohortData]);
 
   const total = filteredData.length;
   const churned = filteredData.filter(i => i.churn === 1).length;
@@ -68,13 +75,13 @@ export default function CustomerSegmentsSection() {
             Customer Segments & Cohort Filter
           </h2>
           <p className="text-sm text-[#7A5C77] mt-1 max-w-xl font-medium">
-            Slice and dice the analysis cohort across contract, tier, gender, escalation, and risk dimensions.
+            Slice and dice the entire 25,000-customer cohort across contract, plan tier, gender, escalation, and risk dimensions.
           </p>
         </div>
 
         <button
           onClick={resetFilters}
-          className="mt-4 md:mt-0 inline-flex items-center space-x-2 text-xs font-bold text-[#2D1E2F] hover:text-[#7A5C77] bg-[#FFFFFF] px-3.5 py-2 rounded-xl border border-[#F5CBCB] hover:border-[#C5B3D3] shadow-sm transition-all focus:outline-none"
+          className="mt-4 md:mt-0 inline-flex items-center space-x-2 text-xs font-bold text-[#2D1E2F] hover:text-[#7A5C77] bg-[#FFFFFF] px-3.5 py-2 rounded-xl border border-[#F5CBCB] hover:border-[#C5B3D3] shadow-sm transition-all focus:outline-none cursor-pointer"
         >
           <RotateCcw className="w-3.5 h-3.5" />
           <span>Reset Filters</span>
@@ -100,7 +107,7 @@ export default function CustomerSegmentsSection() {
 
         <div>
           <label className="block text-[11px] font-bold text-[#7A5C77] uppercase tracking-wider mb-1.5">
-            Subscription Plan
+            Plan Type
           </label>
           <select
             value={filters.plan}
@@ -131,14 +138,14 @@ export default function CustomerSegmentsSection() {
 
         <div>
           <label className="block text-[11px] font-bold text-[#7A5C77] uppercase tracking-wider mb-1.5">
-            Escalation Ticket
+            Escalation Status
           </label>
           <select
             value={filters.escalations}
             onChange={(e) => setFilters({ ...filters, escalations: e.target.value })}
             className="w-full bg-[#FFFFFF] border border-[#F5CBCB] text-xs font-semibold text-[#2D1E2F] rounded-lg px-3 py-2 focus:outline-none focus:border-[#C5B3D3]"
           >
-            <option value="All">All Tickets</option>
+            <option value="All">All Statuses</option>
             <option value="Y">Escalated (Y)</option>
             <option value="N">Not Escalated (N)</option>
           </select>
@@ -155,7 +162,8 @@ export default function CustomerSegmentsSection() {
           >
             <option value="All">All Risk Tiers</option>
             <option value="high">High Risk (&ge;70)</option>
-            <option value="low">Low Risk (&lt;50)</option>
+            <option value="medium">Medium Risk (31-70)</option>
+            <option value="low">Low Risk (&lt;30)</option>
           </select>
         </div>
       </div>
@@ -165,7 +173,7 @@ export default function CustomerSegmentsSection() {
         <div className="p-4 rounded-xl bg-[#FFFFFF] border border-[#F5CBCB] flex items-center justify-between shadow-sm">
           <div>
             <p className="text-[11px] font-bold text-[#7A5C77]">Selected Cohort Size</p>
-            <p className="text-2xl font-black text-[#2D1E2F]">{total}</p>
+            <p className="text-2xl font-black text-[#2D1E2F]">{loading ? 'Loading...' : total.toLocaleString()}</p>
           </div>
           <Users className="w-5 h-5 text-[#7A5C77]" />
         </div>
@@ -173,7 +181,7 @@ export default function CustomerSegmentsSection() {
         <div className="p-4 rounded-xl bg-[#FFFFFF] border border-[#F5CBCB] flex items-center justify-between shadow-sm">
           <div>
             <p className="text-[11px] font-bold text-[#7A5C77]">Segment Cancellations</p>
-            <p className="text-2xl font-black text-[#E65B7B]">{churned}</p>
+            <p className="text-2xl font-black text-[#E65B7B]">{loading ? '...' : churned.toLocaleString()}</p>
           </div>
           <UserX className="w-5 h-5 text-[#E65B7B]" />
         </div>
@@ -181,7 +189,7 @@ export default function CustomerSegmentsSection() {
         <div className="p-4 rounded-xl bg-[#FFFFFF] border border-[#F5CBCB] flex items-center justify-between shadow-sm">
           <div>
             <p className="text-[11px] font-bold text-[#7A5C77]">Segment Churn Rate</p>
-            <p className="text-2xl font-black text-[#E65B7B]">{churnRate}%</p>
+            <p className="text-2xl font-black text-[#E65B7B]">{loading ? '...' : `${churnRate}%`}</p>
           </div>
           <Percent className="w-5 h-5 text-[#E65B7B]" />
         </div>
@@ -189,7 +197,7 @@ export default function CustomerSegmentsSection() {
         <div className="p-4 rounded-xl bg-[#FFFFFF] border border-[#F5CBCB] flex items-center justify-between shadow-sm">
           <div>
             <p className="text-[11px] font-bold text-[#7A5C77]">Segment Retention</p>
-            <p className="text-2xl font-black text-[#3BB28B]">{retentionRate}%</p>
+            <p className="text-2xl font-black text-[#3BB28B]">{loading ? '...' : `${retentionRate}%`}</p>
           </div>
           <ShieldCheck className="w-5 h-5 text-[#3BB28B]" />
         </div>
@@ -211,15 +219,21 @@ export default function CustomerSegmentsSection() {
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F5CBCB]/60 font-medium">
-            {filteredData.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan="8" className="px-4 py-8 text-center text-[#7A5C77]">
+                  Loading live 25,000 customer dataset...
+                </td>
+              </tr>
+            ) : filteredData.length === 0 ? (
               <tr>
                 <td colSpan="8" className="px-4 py-8 text-center text-[#7A5C77]">
                   No customer records match the selected filters.
                 </td>
               </tr>
             ) : (
-              filteredData.slice(0, 8).map((item) => (
-                <tr key={item.id} className="hover:bg-[#FBEFEF] transition-colors">
+              filteredData.slice(0, 10).map((item, idx) => (
+                <tr key={`${item.id}-${idx}`} className="hover:bg-[#FBEFEF] transition-colors">
                   <td className="px-4 py-3 font-mono font-bold text-[#7A5C77]">{item.id}</td>
                   <td className="px-4 py-3 text-[#2D1E2F] capitalize font-bold">{item.name}</td>
                   <td className="px-4 py-3">{item.plan}</td>

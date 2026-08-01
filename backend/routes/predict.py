@@ -9,22 +9,19 @@ from backend.ml_service import ml_service
 router = APIRouter(prefix="/api/predict", tags=["Live Prediction"])
 
 class CustomerPredictInput(BaseModel):
-    customer_age: float = 35.0
+    age: float = 30.0
     tenure_months: float = 12.0
-    subscription_type: str = "Pro"
-    monthly_spend: float = 4500.0
-    contract_length: str = "1 Month"
-    login_frequency: float = 14.0
-    avg_session_duration: float = 20.0
-    support_tickets: float = 2.0
-    complaints: float = 0.0
-    payment_failures: float = 0.0
-    discount_usage: float = 0.0
-    product_usage: str = "Medium"
-    last_active_days: float = 5.0
-    customer_satisfaction: float = 3.8
-    previous_upgrades: float = 0.0
-    previous_downgrades: float = 0.0
+    plan_type: str = "Standard"
+    subscription_type: str = "Organic"
+    contract_type: str = "Monthly"
+    monthly_charges: float = 15.0
+    cltv: float = 640.0
+    churn_score: float = 34.0
+    escalations: str = "N"
+    csat_score: float = 50.0
+    complaint_count: float = 1.0
+    gender: str = "Male"
+    cancellation_reason: str = "Too expensive"
 
 @router.post("")
 def predict_churn(input_data: CustomerPredictInput):

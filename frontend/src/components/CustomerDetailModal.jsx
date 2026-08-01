@@ -2,13 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { X, ShieldAlert, Heart, CreditCard, AlertTriangle, ArrowUpRight, UserCheck } from 'lucide-react';
 
 const fallbackCustomerLookup = {
-  '0002-ORFBO': { customer_id: '0002-ORFBO', customer_name: 'Keshav', subscription_type: 'Basic', location: 'Maharashtra', tenure_months: 12, monthly_spend: 15.5, churn_probability: 35, risk_level: 'LOW', health_score: 85, revenue_at_risk: 0, recommended_action: 'Send standard annual contract renewal discount.', login_frequency: 12, avg_session_duration: 18.5, last_active_days: 2, customer_satisfaction: 4.2, support_tickets: 1, complaints: 0, payment_failures: 0, contract_length: 'Monthly' },
-  '0003-MKNFE': { customer_id: '0003-MKNFE', customer_name: 'Raghav', subscription_type: 'Basic', location: 'Karnataka', tenure_months: 4, monthly_spend: 19.8, churn_probability: 82, risk_level: 'HIGH', health_score: 25, revenue_at_risk: 19.8, recommended_action: 'Priority technical support audit & contract upgrade offer.', login_frequency: 2, avg_session_duration: 5.0, last_active_days: 14, customer_satisfaction: 2.1, support_tickets: 4, complaints: 2, payment_failures: 1, contract_length: 'Monthly' },
-  '0004-TLHLJ': { customer_id: '0004-TLHLJ', customer_name: 'Lalita', subscription_type: 'Basic', location: 'Delhi', tenure_months: 5, monthly_spend: 20.1, churn_probability: 78, risk_level: 'HIGH', health_score: 30, revenue_at_risk: 20.1, recommended_action: 'Proactive support outreach & free feature upgrade.', login_frequency: 3, avg_session_duration: 7.2, last_active_days: 10, customer_satisfaction: 2.3, support_tickets: 3, complaints: 1, payment_failures: 0, contract_length: 'Monthly' },
-  '0013-EXCHZ': { customer_id: '0013-EXCHZ', customer_name: 'Mira', subscription_type: 'Basic', location: 'Delhi', tenure_months: 3, monthly_spend: 18.2, churn_probability: 91, risk_level: 'HIGH', health_score: 15, revenue_at_risk: 18.2, recommended_action: 'Immediate retention call & 15% annual contract incentive.', login_frequency: 1, avg_session_duration: 4.0, last_active_days: 18, customer_satisfaction: 1.8, support_tickets: 5, complaints: 3, payment_failures: 1, contract_length: 'Monthly' },
-  '0015-UOANM': { customer_id: '0015-UOANM', customer_name: 'Ananya', subscription_type: 'Basic', location: 'Karnataka', tenure_months: 2, monthly_spend: 17.9, churn_probability: 88, risk_level: 'HIGH', health_score: 20, revenue_at_risk: 17.9, recommended_action: 'Resolve support escalation & feature onboarding walkthrough.', login_frequency: 2, avg_session_duration: 6.0, last_active_days: 12, customer_satisfaction: 2.0, support_tickets: 4, complaints: 2, payment_failures: 0, contract_length: 'Monthly' },
-  '0016-FBBAZ': { customer_id: '0016-FBBAZ', customer_name: 'Priya', subscription_type: 'Standard', location: 'Meghalaya', tenure_months: 6, monthly_spend: 31.0, churn_probability: 75, risk_level: 'HIGH', health_score: 32, revenue_at_risk: 31.0, recommended_action: 'Regional coverage review & dedicated manager check-in.', login_frequency: 4, avg_session_duration: 10.0, last_active_days: 8, customer_satisfaction: 2.5, support_tickets: 3, complaints: 1, payment_failures: 0, contract_length: 'Monthly' },
-  '0017-WMJ12': { customer_id: '0017-WMJ12', customer_name: 'Aditya', subscription_type: 'Standard', location: 'Telangana', tenure_months: 5, monthly_spend: 33.2, churn_probability: 79, risk_level: 'HIGH', health_score: 28, revenue_at_risk: 33.2, recommended_action: 'Executive check-in call & SLA response guarantee.', login_frequency: 3, avg_session_duration: 8.5, last_active_days: 9, customer_satisfaction: 2.2, support_tickets: 4, complaints: 2, payment_failures: 1, contract_length: 'Monthly' }
+  '0020-JDNXP': { customerid: '0020-JDNXP', 'customer name': 'mina', plan_type: 'Premium', state: 'Delhi', country: 'India', contract_type: 'Annual', monthly_charges: 23.10, cltv: 1610, churn_score: 8, churn_probability: 72, risk_level: 'HIGH', health_score: 42, revenue_at_risk: 199.6, recommended_action: 'Assign Dedicated Account Manager & schedule emergency call.', escalations: 'Y', csat_score: 28.83, complaint_count: 0.99, cancellation_reason: 'Switched to competitor', subscription_type: 'Organic', gender: 'Female', dob: '23-11-1995' },
+  '0013-EXCHZ': { customerid: '0013-EXCHZ', 'customer name': 'mira', plan_type: 'Basic', state: 'Delhi', country: 'India', contract_type: 'Monthly', monthly_charges: 17.79, cltv: 550, churn_score: 79, churn_probability: 91, risk_level: 'HIGH', health_score: 15, revenue_at_risk: 194.2, recommended_action: 'Provide 25% Contract Renewal Discount & Loyalty Incentive.', escalations: 'N', csat_score: 42.15, complaint_count: 1.45, cancellation_reason: 'Too expensive', subscription_type: 'Paid', gender: 'Female', dob: '15-03-1990' },
+  '0003-MKNFE': { customerid: '0003-MKNFE', 'customer name': 'mohan', plan_type: 'Standard', state: 'Rajasthan', country: 'India', contract_type: 'Monthly', monthly_charges: 10.59, cltv: 335, churn_score: 3, churn_probability: 68, risk_level: 'MEDIUM', health_score: 48, revenue_at_risk: 86.3, recommended_action: 'Priority Customer Support follow-up on unresolved escalations.', escalations: 'Y', csat_score: 55.20, complaint_count: 1.12, cancellation_reason: 'Poor streaming quality', subscription_type: 'Refferal', gender: 'Male', dob: '08-07-1988' }
 };
 
 export default function CustomerDetailModal({ customerId, onClose }) {
@@ -31,25 +27,27 @@ export default function CustomerDetailModal({ customerId, onClose }) {
       .catch(err => {
         // Fallback customer detail object
         const local = fallbackCustomerLookup[customerId] || {
-          customer_id: customerId,
-          customer_name: 'Cohort Customer',
-          subscription_type: 'Basic',
-          location: 'India',
-          tenure_months: 6,
-          monthly_spend: 25.0,
-          churn_probability: 70,
-          risk_level: 'HIGH',
-          health_score: 35,
-          revenue_at_risk: 25.0,
-          recommended_action: 'Proactive retention review & annual contract discount.',
-          login_frequency: 4,
-          avg_session_duration: 11.0,
-          last_active_days: 7,
-          customer_satisfaction: 3.0,
-          support_tickets: 2,
-          complaints: 1,
-          payment_failures: 0,
-          contract_length: 'Monthly'
+          customerid: customerId,
+          'customer name': 'Customer',
+          plan_type: 'Standard',
+          state: 'India',
+          country: 'India',
+          contract_type: 'Monthly',
+          monthly_charges: 20.0,
+          cltv: 640,
+          churn_score: 34,
+          churn_probability: 50,
+          risk_level: 'MEDIUM',
+          health_score: 55,
+          revenue_at_risk: 120.0,
+          recommended_action: 'Initiate Automated Health Check & Feedback Survey.',
+          escalations: 'N',
+          csat_score: 50.0,
+          complaint_count: 1.0,
+          cancellation_reason: 'Too expensive',
+          subscription_type: 'Organic',
+          gender: 'Male',
+          dob: '01-01-1990'
         };
         setCustomer(local);
         setLoading(false);
@@ -59,9 +57,9 @@ export default function CustomerDetailModal({ customerId, onClose }) {
   if (!customerId) return null;
 
   const shapFactors = customer ? [
-    { factor: `Contract: ${customer.contract_length || 'Monthly'}`, impact: customer.contract_length === 'Monthly' ? '+35% Churn Risk' : '-10% Risk', direction: customer.contract_length === 'Monthly' ? 'positive' : 'negative' },
-    { factor: `Support Escalations (${customer.complaints || 0})`, impact: (customer.complaints || 0) > 0 ? `+${(customer.complaints || 0) * 15}% Churn Risk` : '-12% Risk', direction: (customer.complaints || 0) > 0 ? 'positive' : 'negative' },
-    { factor: `Plan Tier: ${customer.subscription_type || 'Basic'}`, impact: customer.subscription_type === 'Basic' ? '+20% Churn Risk' : '-15% Risk', direction: customer.subscription_type === 'Basic' ? 'positive' : 'negative' }
+    { factor: `Contract: ${customer.contract_type || 'Monthly'}`, impact: customer.contract_type === 'Monthly' ? '+24% Churn Risk' : '-10% Risk', direction: customer.contract_type === 'Monthly' ? 'positive' : 'negative' },
+    { factor: `Escalation: ${customer.escalations || 'N'}`, impact: customer.escalations === 'Y' ? '+20% Churn Risk' : '-5% Risk', direction: customer.escalations === 'Y' ? 'positive' : 'negative' },
+    { factor: `Plan: ${customer.plan_type || 'Standard'}`, impact: customer.plan_type === 'Basic' ? '+18% Churn Risk' : customer.plan_type === 'Premium' ? '-12% Risk' : '+5% Risk', direction: customer.plan_type === 'Basic' ? 'positive' : customer.plan_type === 'Premium' ? 'negative' : 'positive' }
   ] : [];
 
   return (
@@ -71,17 +69,17 @@ export default function CustomerDetailModal({ customerId, onClose }) {
         <div className="px-6 py-4 border-b border-[#F5CBCB] flex items-center justify-between bg-[#FFE2E2]">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#C5B3D3] to-[#F5CBCB] flex items-center justify-center font-black text-[#2D1E2F] text-sm">
-              {customer?.customer_name ? customer.customer_name.substring(0, 2).toUpperCase() : 'CU'}
+              {customer?.['customer name'] ? customer['customer name'].substring(0, 2).toUpperCase() : 'CU'}
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h3 className="text-base font-extrabold text-[#2D1E2F]">{customer?.customer_name || 'Customer Profile'}</h3>
+                <h3 className="text-base font-extrabold text-[#2D1E2F] capitalize">{customer?.['customer name'] || 'Customer Profile'}</h3>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold text-[#7A5C77] bg-[#FFFFFF] border border-[#F5CBCB]">
-                  {customer?.customer_id}
+                  {customer?.customerid}
                 </span>
               </div>
               <p className="text-xs text-[#7A5C77] font-medium">
-                {customer?.subscription_type} Plan &bull; {customer?.location} &bull; {customer?.tenure_months} Months Tenure
+                {customer?.plan_type} Plan &bull; {customer?.state} &bull; {customer?.contract_type} Contract
               </p>
             </div>
           </div>
@@ -123,7 +121,7 @@ export default function CustomerDetailModal({ customerId, onClose }) {
               {/* Churn Probability */}
               <div className="p-4 rounded-xl bg-[#FFE2E2] border border-[#F5CBCB] flex flex-col justify-between shadow-sm">
                 <div className="flex items-center justify-between text-[#7A5C77] text-[11px] font-bold">
-                  <span>Churn Score</span>
+                  <span>Churn Probability</span>
                   <ShieldAlert className="w-4 h-4 text-[#E65B7B]" />
                 </div>
                 <div className="mt-2 flex items-baseline justify-between">
@@ -142,15 +140,15 @@ export default function CustomerDetailModal({ customerId, onClose }) {
                 </div>
               </div>
 
-              {/* Monthly Spend */}
+              {/* Monthly Charges */}
               <div className="p-4 rounded-xl bg-[#FFE2E2] border border-[#F5CBCB] flex flex-col justify-between shadow-sm">
                 <div className="flex items-center justify-between text-[#7A5C77] text-[11px] font-bold">
-                  <span>Monthly Spend</span>
+                  <span>Monthly Charges</span>
                   <CreditCard className="w-4 h-4 text-[#7A5C77]" />
                 </div>
                 <div className="mt-2">
-                  <span className="text-xl font-black text-[#2D1E2F]">₹{customer.monthly_spend}</span>
-                  <p className="text-[10px] text-[#7A5C77] font-bold mt-1">₹{Math.round(customer.monthly_spend * 12)}/yr ARR</p>
+                  <span className="text-xl font-black text-[#2D1E2F]">₹{typeof customer.monthly_charges === 'number' ? customer.monthly_charges.toFixed(2) : customer.monthly_charges}</span>
+                  <p className="text-[10px] text-[#7A5C77] font-bold mt-1">CLTV: ₹{customer.cltv}</p>
                 </div>
               </div>
             </div>
@@ -184,37 +182,45 @@ export default function CustomerDetailModal({ customerId, onClose }) {
               </div>
             </div>
 
-            {/* Usage & Support Metadata */}
+            {/* Customer Details Grid */}
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 rounded-xl bg-[#FFE2E2]/50 border border-[#F5CBCB] space-y-2 text-xs">
-                <h5 className="font-extrabold text-[#2D1E2F] border-b border-[#F5CBCB] pb-2">Usage Metrics</h5>
+                <h5 className="font-extrabold text-[#2D1E2F] border-b border-[#F5CBCB] pb-2">Subscription Details</h5>
                 <div className="flex justify-between py-1 border-b border-[#F5CBCB]/60">
-                  <span className="text-[#7A5C77] font-medium">Login Frequency</span>
-                  <span className="font-bold text-[#2D1E2F]">{customer.login_frequency} / month</span>
+                  <span className="text-[#7A5C77] font-medium">Plan Type</span>
+                  <span className="font-bold text-[#2D1E2F]">{customer.plan_type}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-[#F5CBCB]/60">
-                  <span className="text-[#7A5C77] font-medium">Avg Session</span>
-                  <span className="font-bold text-[#2D1E2F]">{customer.avg_session_duration} mins</span>
+                  <span className="text-[#7A5C77] font-medium">Contract Type</span>
+                  <span className="font-bold text-[#2D1E2F]">{customer.contract_type}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-[#F5CBCB]/60">
+                  <span className="text-[#7A5C77] font-medium">Subscription Type</span>
+                  <span className="font-bold text-[#2D1E2F]">{customer.subscription_type}</span>
                 </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-[#7A5C77] font-medium">Last Active</span>
-                  <span className="font-bold text-[#2D1E2F]">{customer.last_active_days} days ago</span>
+                  <span className="text-[#7A5C77] font-medium">Cancellation Reason</span>
+                  <span className="font-bold text-[#2D1E2F]">{customer.cancellation_reason}</span>
                 </div>
               </div>
 
               <div className="p-4 rounded-xl bg-[#FFE2E2]/50 border border-[#F5CBCB] space-y-2 text-xs">
-                <h5 className="font-extrabold text-[#2D1E2F] border-b border-[#F5CBCB] pb-2">Support History</h5>
+                <h5 className="font-extrabold text-[#2D1E2F] border-b border-[#F5CBCB] pb-2">Support & Satisfaction</h5>
                 <div className="flex justify-between py-1 border-b border-[#F5CBCB]/60">
-                  <span className="text-[#7A5C77] font-medium">Support Tickets</span>
-                  <span className="font-bold text-[#2D1E2F]">{customer.support_tickets} tickets</span>
+                  <span className="text-[#7A5C77] font-medium">CSAT Score</span>
+                  <span className="font-bold text-[#2D1E2F]">{typeof customer.csat_score === 'number' ? customer.csat_score.toFixed(1) : customer.csat_score} / 100</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-[#F5CBCB]/60">
-                  <span className="text-[#7A5C77] font-medium">Complaints</span>
-                  <span className="font-bold text-[#E65B7B]">{customer.complaints}</span>
+                  <span className="text-[#7A5C77] font-medium">Escalation</span>
+                  <span className={`font-bold ${customer.escalations === 'Y' ? 'text-[#E65B7B]' : 'text-[#3BB28B]'}`}>{customer.escalations === 'Y' ? 'Escalated' : 'None'}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-[#F5CBCB]/60">
+                  <span className="text-[#7A5C77] font-medium">Complaint Count</span>
+                  <span className="font-bold text-[#2D1E2F]">{typeof customer.complaint_count === 'number' ? customer.complaint_count.toFixed(2) : customer.complaint_count}</span>
                 </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-[#7A5C77] font-medium">Contract Type</span>
-                  <span className="font-bold text-[#2D1E2F]">{customer.contract_length}</span>
+                  <span className="text-[#7A5C77] font-medium">Churn Score</span>
+                  <span className="font-bold text-[#2D1E2F]">{customer.churn_score}</span>
                 </div>
               </div>
             </div>

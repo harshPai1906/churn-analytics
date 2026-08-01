@@ -4,30 +4,30 @@ import { ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tool
 
 const fallbackRevenueData = {
   kpis: {
-    total_arr: 792000,
-    mrr: 66000,
-    revenue_at_risk: 73.94,
-    revenue_recovered: 58.0,
-    arpu: 18.85,
-    ltv: 2450
+    total_arr: 5400000,
+    mrr: 450000,
+    revenue_at_risk: 48200,
+    revenue_recovered: 16870,
+    arpu: 18.0,
+    ltv: 780
   },
   revenue_trend: [
-    { month: 'Jan', arr: 60000, revenue_at_risk: 15.0 },
-    { month: 'Feb', arr: 62000, revenue_at_risk: 18.2 },
-    { month: 'Mar', arr: 64000, revenue_at_risk: 22.0 },
-    { month: 'Apr', arr: 65000, revenue_at_risk: 31.0 },
-    { month: 'May', arr: 65500, revenue_at_risk: 45.0 },
-    { month: 'Jun', arr: 66000, revenue_at_risk: 73.9 }
+    { month: 'Jan', arr: 420000, revenue_at_risk: 3200 },
+    { month: 'Feb', arr: 428000, revenue_at_risk: 3500 },
+    { month: 'Mar', arr: 436000, revenue_at_risk: 3800 },
+    { month: 'Apr', arr: 440000, revenue_at_risk: 4100 },
+    { month: 'May', arr: 445000, revenue_at_risk: 4400 },
+    { month: 'Jun', arr: 450000, revenue_at_risk: 4800 }
   ],
   revenue_by_subscription: [
-    { plan: 'Basic', arr: 91.5 },
-    { plan: 'Standard', arr: 265.2 },
-    { plan: 'Premium', arr: 346.5 }
+    { plan: 'Basic', arr: 1350000 },
+    { plan: 'Standard', arr: 2268000 },
+    { plan: 'Premium', arr: 1782000 }
   ],
   revenue_by_segment: [
-    { segment: 'Month-to-Month', revenue_at_risk: 114.2 },
-    { segment: 'Basic Plan', revenue_at_risk: 54.3 },
-    { segment: 'Annual Premium', revenue_at_risk: 48.5 }
+    { segment: 'At Risk', revenue_at_risk: 14500 },
+    { segment: 'Lost Customers', revenue_at_risk: 12200 },
+    { segment: 'Price Sensitive', revenue_at_risk: 9800 }
   ]
 };
 
@@ -54,6 +54,12 @@ export default function RevenueView() {
 
   const { kpis, revenue_trend, revenue_by_subscription, revenue_by_segment } = data;
 
+  const formatCurrency = (val) => {
+    if (val >= 1000000) return `₹${(val / 1000000).toFixed(1)}M`;
+    if (val >= 1000) return `₹${(val / 1000).toFixed(1)}K`;
+    return `₹${val}`;
+  };
+
   return (
     <div className="p-6 space-y-6 max-w-[1600px] mx-auto bg-[#FBEFEF] text-[#2D1E2F]">
       {/* Header */}
@@ -71,38 +77,38 @@ export default function RevenueView() {
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <div className="p-4 rounded-xl bg-[#FFFFFF] border border-[#F5CBCB] shadow-sm">
           <span className="text-xs font-bold text-[#7A5C77]">Total ARR</span>
-          <p className="text-xl font-black text-[#2D1E2F] mt-2">₹792K</p>
+          <p className="text-xl font-black text-[#2D1E2F] mt-2">{formatCurrency(kpis.total_arr)}</p>
           <span className="text-[10px] font-bold text-[#3BB28B]">Annualized Recurring</span>
         </div>
 
         <div className="p-4 rounded-xl bg-[#FFFFFF] border border-[#F5CBCB] shadow-sm">
           <span className="text-xs font-bold text-[#7A5C77]">Monthly Recurring (MRR)</span>
-          <p className="text-xl font-black text-[#2D1E2F] mt-2">₹66K</p>
+          <p className="text-xl font-black text-[#2D1E2F] mt-2">{formatCurrency(kpis.mrr)}</p>
           <span className="text-[10px] font-bold text-[#7A5C77]">Active Subscriptions</span>
         </div>
 
         <div className="p-4 rounded-xl bg-[#FFFFFF] border border-[#F5CBCB] shadow-sm">
           <span className="text-xs font-bold text-[#7A5C77]">Revenue at Risk</span>
-          <p className="text-xl font-black text-[#E65B7B] mt-2">₹73.94/mo</p>
+          <p className="text-xl font-black text-[#E65B7B] mt-2">{formatCurrency(kpis.revenue_at_risk)}</p>
           <span className="text-[10px] font-bold text-[#E65B7B]">High Risk ARR</span>
         </div>
 
         <div className="p-4 rounded-xl bg-[#FFFFFF] border border-[#F5CBCB] shadow-sm">
           <span className="text-xs font-bold text-[#7A5C77]">Projected Recovered</span>
-          <p className="text-xl font-black text-[#3BB28B] mt-2">₹58.0/mo</p>
+          <p className="text-xl font-black text-[#3BB28B] mt-2">{formatCurrency(kpis.revenue_recovered)}</p>
           <span className="text-[10px] font-bold text-[#3BB28B]">Retention Campaign ROI</span>
         </div>
 
         <div className="p-4 rounded-xl bg-[#FFFFFF] border border-[#F5CBCB] shadow-sm">
           <span className="text-xs font-bold text-[#7A5C77]">ARPU</span>
-          <p className="text-xl font-black text-[#2D1E2F] mt-2">₹18.85</p>
+          <p className="text-xl font-black text-[#2D1E2F] mt-2">₹{kpis.arpu}</p>
           <span className="text-[10px] font-bold text-[#7A5C77]">Avg Monthly / User</span>
         </div>
 
         <div className="p-4 rounded-xl bg-[#FFFFFF] border border-[#F5CBCB] shadow-sm">
-          <span className="text-xs font-bold text-[#7A5C77]">Avg LTV</span>
-          <p className="text-xl font-black text-[#2D1E2F] mt-2">₹2,450</p>
-          <span className="text-[10px] font-bold text-[#7A5C77]">Lifetime Realized</span>
+          <span className="text-xs font-bold text-[#7A5C77]">Avg CLTV</span>
+          <p className="text-xl font-black text-[#2D1E2F] mt-2">₹{kpis.ltv}</p>
+          <span className="text-[10px] font-bold text-[#7A5C77]">Lifetime Value</span>
         </div>
       </div>
 
@@ -127,7 +133,7 @@ export default function RevenueView() {
               <YAxis stroke="#7A5C77" fontSize={11} />
               <Tooltip contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#F5CBCB', borderRadius: '12px', color: '#2D1E2F' }} />
               <Legend />
-              <Area type="monotone" dataKey="arr" stroke="#3BB28B" fillOpacity={1} fill="url(#arrGrad)" name="Monthly Spend (₹)" />
+              <Area type="monotone" dataKey="arr" stroke="#3BB28B" fillOpacity={1} fill="url(#arrGrad)" name="Monthly Revenue (₹)" />
               <Area type="monotone" dataKey="revenue_at_risk" stroke="#E65B7B" fillOpacity={1} fill="url(#riskGrad)" name="Revenue at Risk (₹)" />
             </AreaChart>
           </ResponsiveContainer>
@@ -137,7 +143,7 @@ export default function RevenueView() {
       {/* Revenue Split */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="p-5 rounded-xl bg-[#FFFFFF] border border-[#F5CBCB] space-y-4 shadow-sm">
-          <h3 className="text-sm font-extrabold text-[#2D1E2F]">Revenue Share by Subscription Tier</h3>
+          <h3 className="text-sm font-extrabold text-[#2D1E2F]">Revenue Share by Plan Tier</h3>
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={revenue_by_subscription}>
@@ -145,7 +151,7 @@ export default function RevenueView() {
                 <XAxis dataKey="plan" stroke="#7A5C77" fontSize={11} />
                 <YAxis stroke="#7A5C77" fontSize={11} />
                 <Tooltip contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#F5CBCB', borderRadius: '12px', color: '#2D1E2F' }} />
-                <Bar dataKey="arr" fill="#C5B3D3" radius={[6, 6, 0, 0]} name="Total Spend (₹)" />
+                <Bar dataKey="arr" fill="#C5B3D3" radius={[6, 6, 0, 0]} name="Total ARR (₹)" />
               </BarChart>
             </ResponsiveContainer>
           </div>

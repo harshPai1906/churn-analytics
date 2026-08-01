@@ -14,9 +14,9 @@ router = APIRouter(prefix="/api/customers", tags=["Customers"])
 def get_customers(
     search: str = "",
     risk: str = "ALL",
-    subscription: str = "ALL",
-    location: str = "ALL",
-    tenure: str = "ALL",
+    plan: str = "ALL",
+    state: str = "ALL",
+    contract: str = "ALL",
     sort_by: str = "revenue_at_risk",
     order: str = "desc",
     page: int = 1,
@@ -32,42 +32,37 @@ def get_customers(
     if search:
         s = search.lower().strip()
         filtered = filtered[
-            filtered['customer_name'].str.lower().str.contains(s) |
-            filtered['customer_id'].str.lower().str.contains(s)
+            filtered['customer name'].str.lower().str.contains(s) |
+            filtered['customerid'].str.lower().str.contains(s)
         ]
         
     # Risk filter
     if risk != "ALL":
         filtered = filtered[filtered['risk_level'] == risk.upper()]
         
-    # Subscription filter
-    if subscription != "ALL":
-        filtered = filtered[filtered['subscription_type'] == subscription]
+    # Plan filter
+    if plan != "ALL":
+        filtered = filtered[filtered['plan_type'] == plan]
         
-    # Location filter
-    if location != "ALL":
-        filtered = filtered[filtered['location'] == location]
-        
-    # Tenure filter
-    if tenure == "0-6":
-        filtered = filtered[filtered['tenure_months'] <= 6]
-    elif tenure == "6-12":
-        filtered = filtered[(filtered['tenure_months'] > 6) & (filtered['tenure_months'] <= 12)]
-    elif tenure == "12-24":
-        filtered = filtered[(filtered['tenure_months'] > 12) & (filtered['tenure_months'] <= 24)]
-    elif tenure == "24+":
-        filtered = filtered[filtered['tenure_months'] > 24]
+    # State filter
+    if state != "ALL":
+        filtered = filtered[filtered['state'] == state]
+
+    # Contract filter
+    if contract != "ALL":
+        filtered = filtered[filtered['contract_type'] == contract]
         
     # Sorting
     ascending = (order.lower() == "asc")
     valid_sort_cols = {
-        "customer_id": "customer_id",
-        "customer_name": "customer_name",
+        "customerid": "customerid",
+        "customer_name": "customer name",
         "churn_probability": "churn_probability",
         "revenue_at_risk": "revenue_at_risk",
-        "monthly_spend": "monthly_spend",
-        "tenure_months": "tenure_months",
-        "health_score": "health_score"
+        "monthly_charges": "monthly_charges",
+        "churn_score": "churn_score",
+        "health_score": "health_score",
+        "csat_score": "csat_score"
     }
     col = valid_sort_cols.get(sort_by, "revenue_at_risk")
     filtered = filtered.sort_values(by=col, ascending=ascending)
@@ -95,7 +90,7 @@ def get_customer_detail(customer_id: str):
     if df is None or df.empty:
         return {"error": "Dataset not found"}
         
-    cust_df = df[df['customer_id'] == customer_id]
+    cust_df = df[df['customerid'] == customer_id]
     if cust_df.empty:
         return {"error": f"Customer {customer_id} not found"}
         
@@ -105,24 +100,21 @@ def get_customer_detail(customer_id: str):
     shap_factors = ml_service.calculate_shap_factors(row)
     
     # Generate realistic activity timeline
-    tenure = int(row['tenure_months'])
-    tickets = int(row['support_tickets'])
-    last_active = int(row['last_active_days'])
+    escalation = row.get('escalations', 'N')
+    plan = row.get('plan_type', 'Standard')
     
     timeline = [
-        {"event": "Account Created & Subscription Activated", "date": f"{tenure} months ago", "type": "upgrade"},
-        {"event": f"Subscribed to {row['subscription_type']} Plan", "date": f"{min(tenure, 12)} months ago", "type": "payment"},
+        {"event": "Subscription Started", "date": row.get('subscription_start_date', 'N/A'), "type": "upgrade"},
+        {"event": f"Subscribed to {plan} Plan", "date": row.get('subscription_start_date', 'N/A'), "type": "payment"},
     ]
     
-    if tickets > 0:
-        timeline.append({"event": f"Submitted Support Ticket (#{1040 + tickets})", "date": "14 days ago", "type": "ticket"})
-    if row['payment_failures'] > 0:
-        timeline.append({"event": "Payment Retry Warning Issued", "date": "8 days ago", "type": "warning"})
-    if last_active > 7:
-        timeline.append({"event": f"Inactivity Flag: {last_active} days since last session", "date": f"{last_active} days ago", "type": "warning"})
-    else:
-        timeline.append({"event": "User logged into Dashboard", "date": f"{last_active} days ago", "type": "login"})
-        
+    if escalation == 'Y':
+        timeline.append({"event": "Support Escalation Filed", "date": row.get('complaint_date', 'N/A'), "type": "ticket"})
+    
+    reason = row.get('cancellation_reason', '')
+    if reason:
+        timeline.append({"event": f"Cancellation Reason: {reason}", "date": row.get('cancellation_date', 'N/A'), "type": "warning"})
+    
     row['shap_factors'] = shap_factors
     row['timeline'] = timeline
     

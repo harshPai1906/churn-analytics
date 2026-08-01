@@ -1,43 +1,263 @@
-import React, { useEffect, useState } from 'react';
-
-const fallbackCustomers = [
-  { customer_id: '0002-ORFBO', customer_name: 'Keshav', subscription_type: 'Basic', location: 'Maharashtra', tenure_months: 12, monthly_spend: 15.5, product_usage: 'Medium', support_tickets: 1, churn_probability: 35, risk_level: 'LOW', revenue_at_risk: 0, recommended_action: 'Standard renewal reminder' },
-  { customer_id: '0003-MKNFE', customer_name: 'Raghav', subscription_type: 'Basic', location: 'Karnataka', tenure_months: 4, monthly_spend: 19.8, product_usage: 'Low', support_tickets: 4, churn_probability: 82, risk_level: 'HIGH', revenue_at_risk: 19.8, recommended_action: 'Technical support audit & contract upgrade offer' },
-  { customer_id: '0004-TLHLJ', customer_name: 'Lalita', subscription_type: 'Basic', location: 'Delhi', tenure_months: 5, monthly_spend: 20.1, product_usage: 'Low', support_tickets: 3, churn_probability: 78, risk_level: 'HIGH', revenue_at_risk: 20.1, recommended_action: 'Proactive support outreach' },
-  { customer_id: '0011-IGKFF', customer_name: 'Mohan', subscription_type: 'Premium', location: 'Nagaland', tenure_months: 24, monthly_spend: 45.0, product_usage: 'High', support_tickets: 0, churn_probability: 22, risk_level: 'LOW', revenue_at_risk: 0, recommended_action: 'Vip loyalty reward' },
-  { customer_id: '0013-EXCHZ', customer_name: 'Mira', subscription_type: 'Basic', location: 'Delhi', tenure_months: 3, monthly_spend: 18.2, product_usage: 'Low', support_tickets: 5, churn_probability: 91, risk_level: 'HIGH', revenue_at_risk: 18.2, recommended_action: 'Immediate retention call & annual contract incentive' },
-  { customer_id: '0014-CBKSB', customer_name: 'Rohit', subscription_type: 'Standard', location: 'Maharashtra', tenure_months: 18, monthly_spend: 29.5, product_usage: 'High', support_tickets: 1, churn_probability: 41, risk_level: 'LOW', revenue_at_risk: 0, recommended_action: 'Feature update newsletter' },
-  { customer_id: '0015-UOANM', customer_name: 'Ananya', subscription_type: 'Basic', location: 'Karnataka', tenure_months: 2, monthly_spend: 17.9, product_usage: 'Low', support_tickets: 4, churn_probability: 88, risk_level: 'HIGH', revenue_at_risk: 17.9, recommended_action: 'Resolve support escalation & feature onboarding' },
-  { customer_id: '0016-FBBAZ', customer_name: 'Priya', subscription_type: 'Standard', location: 'Meghalaya', tenure_months: 6, monthly_spend: 31.0, product_usage: 'Low', support_tickets: 3, churn_probability: 75, risk_level: 'HIGH', revenue_at_risk: 31.0, recommended_action: 'Regional coverage review' },
-  { customer_id: '0017-WMJ12', customer_name: 'Aditya', subscription_type: 'Standard', location: 'Telangana', tenure_months: 5, monthly_spend: 33.2, product_usage: 'Low', support_tickets: 4, churn_probability: 79, risk_level: 'HIGH', revenue_at_risk: 33.2, recommended_action: 'Executive check-in call & SLA guarantee' },
-  { customer_id: '0018-BSZGE', customer_name: 'Neha', subscription_type: 'Premium', location: 'Meghalaya', tenure_months: 30, monthly_spend: 52.0, product_usage: 'High', support_tickets: 0, churn_probability: 28, risk_level: 'LOW', revenue_at_risk: 0, recommended_action: 'Annual contract auto-renew' }
-];
+import React, { useEffect, useState, useCallback } from 'react';
+import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, X, Filter, RotateCcw } from 'lucide-react';
 
 export default function CustomersView({ onSelectCustomer }) {
-  const [customers, setCustomers] = useState(fallbackCustomers);
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    fetch('/api/customers')
+  // Filter & Search State
+  const [search, setSearch] = useState('');
+  const [risk, setRisk] = useState('ALL');
+  const [plan, setPlan] = useState('ALL');
+  const [contract, setContract] = useState('ALL');
+  const [stateFilter, setStateFilter] = useState('ALL');
+  const [sortBy, setSortBy] = useState('revenue_at_risk');
+  const [order, setOrder] = useState('desc');
+
+  // Pagination State
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
+  const [jumpPageInput, setJumpPageInput] = useState('');
+
+  const fetchCustomers = useCallback(() => {
+    setLoading(true);
+    const params = new URLSearchParams({
+      search: search.trim(),
+      risk,
+      plan,
+      contract,
+      state: stateFilter,
+      sort_by: sortBy,
+      order,
+      page: page.toString(),
+      limit: limit.toString()
+    });
+
+    fetch(`/api/customers?${params.toString()}`)
       .then(res => res.json())
       .then(data => {
-        if (data.customers && data.customers.length > 0) {
+        if (data.customers) {
           setCustomers(data.customers);
+          setTotalCount(data.total || 0);
+          setTotalPages(data.total_pages || 1);
         }
+        setLoading(false);
       })
       .catch(err => {
-        console.warn("Using fallback customers cohort data:", err);
+        console.warn("API Error, fallback customer data used:", err);
+        setLoading(false);
       });
-  }, []);
+  }, [search, risk, plan, contract, stateFilter, sortBy, order, page, limit]);
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [fetchCustomers]);
+
+  // Reset page to 1 when filters or search change
+  const handleFilterChange = (setter, value) => {
+    setter(value);
+    setPage(1);
+  };
+
+  const handleResetFilters = () => {
+    setSearch('');
+    setRisk('ALL');
+    setPlan('ALL');
+    setContract('ALL');
+    setStateFilter('ALL');
+    setSortBy('revenue_at_risk');
+    setOrder('desc');
+    setPage(1);
+    setLimit(25);
+  };
+
+  const handleJumpPage = (e) => {
+    e.preventDefault();
+    const p = parseInt(jumpPageInput, 10);
+    if (!isNaN(p) && p >= 1 && p <= totalPages) {
+      setPage(p);
+      setJumpPageInput('');
+    }
+  };
+
+  const startRecord = totalCount === 0 ? 0 : (page - 1) * limit + 1;
+  const endRecord = Math.min(page * limit, totalCount);
+
+  // Generate page numbers array for pagination bar
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+    let start = Math.max(1, page - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages, start + maxVisible - 1);
+
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
 
   return (
     <div className="p-6 space-y-6 max-w-[1600px] mx-auto bg-[#FBEFEF] text-[#2D1E2F]">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#F5CBCB]">
         <div>
-          <h1 className="text-xl font-extrabold text-[#2D1E2F]">Customer Intelligence Directory</h1>
+          <h1 className="text-xl font-extrabold text-[#2D1E2F] flex items-center gap-2">
+            Customer Intelligence Directory
+          </h1>
           <p className="text-xs text-[#7A5C77] font-medium mt-0.5">
-            Overview and churn risk predictions for customer accounts.
+            Search, filter, and browse all customer records with real-time ML churn risk analytics.
           </p>
+        </div>
+
+        <div className="flex items-center space-x-3">
+          <span className="text-xs font-mono font-bold px-3 py-1.5 rounded-xl bg-[#FFE2E2] text-[#2D1E2F] border border-[#F5CBCB]">
+            {totalCount.toLocaleString()} Total Records
+          </span>
+          <button
+            onClick={handleResetFilters}
+            className="px-3 py-1.5 rounded-xl bg-[#FFFFFF] border border-[#F5CBCB] hover:border-[#C5B3D3] text-[#2D1E2F] text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            Reset Filters
+          </button>
+        </div>
+      </div>
+
+      {/* Search & Filter Controls Panel */}
+      <div className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#F5CBCB] space-y-4 shadow-sm">
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="w-4 h-4 text-[#7A5C77] absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => handleFilterChange(setSearch, e.target.value)}
+            placeholder="Search by customer name or ID (e.g. 'mina', '0020-JDNXP')..."
+            className="w-full pl-10 pr-10 py-2.5 bg-[#FFE2E2]/50 border border-[#F5CBCB] rounded-xl text-xs font-bold text-[#2D1E2F] placeholder-[#7A5C77] focus:outline-none focus:border-[#C5B3D3] transition-all"
+          />
+          {search && (
+            <button
+              onClick={() => handleFilterChange(setSearch, '')}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#7A5C77] hover:text-[#2D1E2F]"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Filter Dropdowns Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+          <div>
+            <label className="block text-[10px] font-extrabold text-[#7A5C77] uppercase tracking-wider mb-1">
+              Risk Tier
+            </label>
+            <select
+              value={risk}
+              onChange={(e) => handleFilterChange(setRisk, e.target.value)}
+              className="w-full bg-[#FFFFFF] border border-[#F5CBCB] text-xs font-bold text-[#2D1E2F] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#C5B3D3]"
+            >
+              <option value="ALL">All Risk Tiers</option>
+              <option value="HIGH">High Risk (&ge;70%)</option>
+              <option value="MEDIUM">Medium Risk (31-70%)</option>
+              <option value="LOW">Low Risk (&lt;30%)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-extrabold text-[#7A5C77] uppercase tracking-wider mb-1">
+              Plan Tier
+            </label>
+            <select
+              value={plan}
+              onChange={(e) => handleFilterChange(setPlan, e.target.value)}
+              className="w-full bg-[#FFFFFF] border border-[#F5CBCB] text-xs font-bold text-[#2D1E2F] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#C5B3D3]"
+            >
+              <option value="ALL">All Plans</option>
+              <option value="Basic">Basic Plan</option>
+              <option value="Standard">Standard Plan</option>
+              <option value="Premium">Premium Plan</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-extrabold text-[#7A5C77] uppercase tracking-wider mb-1">
+              Contract Type
+            </label>
+            <select
+              value={contract}
+              onChange={(e) => handleFilterChange(setContract, e.target.value)}
+              className="w-full bg-[#FFFFFF] border border-[#F5CBCB] text-xs font-bold text-[#2D1E2F] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#C5B3D3]"
+            >
+              <option value="ALL">All Contracts</option>
+              <option value="Monthly">Monthly</option>
+              <option value="Annual">Annual</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-extrabold text-[#7A5C77] uppercase tracking-wider mb-1">
+              State
+            </label>
+            <select
+              value={stateFilter}
+              onChange={(e) => handleFilterChange(setStateFilter, e.target.value)}
+              className="w-full bg-[#FFFFFF] border border-[#F5CBCB] text-xs font-bold text-[#2D1E2F] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#C5B3D3]"
+            >
+              <option value="ALL">All States</option>
+              <option value="Delhi">Delhi</option>
+              <option value="Rajasthan">Rajasthan</option>
+              <option value="Maharashtra">Maharashtra</option>
+              <option value="Karnataka">Karnataka</option>
+              <option value="Uttar Pradesh">Uttar Pradesh</option>
+              <option value="Meghalaya">Meghalaya</option>
+              <option value="Nagaland">Nagaland</option>
+              <option value="Telangana">Telangana</option>
+              <option value="Kathmandu">Kathmandu</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-extrabold text-[#7A5C77] uppercase tracking-wider mb-1">
+              Sort By
+            </label>
+            <select
+              value={sortBy}
+              onChange={(e) => handleFilterChange(setSortBy, e.target.value)}
+              className="w-full bg-[#FFFFFF] border border-[#F5CBCB] text-xs font-bold text-[#2D1E2F] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#C5B3D3]"
+            >
+              <option value="revenue_at_risk">Revenue at Risk</option>
+              <option value="churn_probability">Churn Probability</option>
+              <option value="monthly_charges">Monthly Charges</option>
+              <option value="churn_score">Churn Score</option>
+              <option value="csat_score">CSAT Score</option>
+              <option value="customer_name">Customer Name</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-extrabold text-[#7A5C77] uppercase tracking-wider mb-1">
+              Per Page
+            </label>
+            <select
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value));
+                setPage(1);
+              }}
+              className="w-full bg-[#FFFFFF] border border-[#F5CBCB] text-xs font-bold text-[#2D1E2F] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#C5B3D3]"
+            >
+              <option value="15">15 per page</option>
+              <option value="25">25 per page</option>
+              <option value="50">50 per page</option>
+              <option value="100">100 per page</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -50,49 +270,163 @@ export default function CustomersView({ onSelectCustomer }) {
                 <th className="p-3.5">ID</th>
                 <th className="p-3.5">Customer Name</th>
                 <th className="p-3.5">Plan</th>
+                <th className="p-3.5">Contract</th>
                 <th className="p-3.5">State</th>
-                <th className="p-3.5">Tenure</th>
-                <th className="p-3.5">Monthly Spend</th>
-                <th className="p-3.5 text-center">Tickets</th>
+                <th className="p-3.5">Monthly Charges</th>
+                <th className="p-3.5 text-center">Escalation</th>
                 <th className="p-3.5">Churn Score</th>
+                <th className="p-3.5">Churn Prob</th>
                 <th className="p-3.5">Risk Tier</th>
                 <th className="p-3.5">Action Plan</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F5CBCB]/60 font-medium">
-              {customers.map((c) => (
-                <tr
-                  key={c.customer_id}
-                  onClick={() => onSelectCustomer && onSelectCustomer(c.customer_id)}
-                  className="hover:bg-[#FBEFEF] cursor-pointer transition-colors"
-                >
-                  <td className="p-3.5 font-mono text-[#7A5C77] font-bold">{c.customer_id}</td>
-                  <td className="p-3.5 font-extrabold text-[#2D1E2F]">{c.customer_name}</td>
-                  <td className="p-3.5">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFE2E2] text-[#2D1E2F] border border-[#F5CBCB]">
-                      {c.subscription_type}
-                    </span>
+              {loading ? (
+                <tr>
+                  <td colSpan="11" className="p-8 text-center text-[#7A5C77] text-xs">
+                    <div className="inline-flex items-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#C5B3D3]"></div>
+                      <span>Loading customer directory records...</span>
+                    </div>
                   </td>
-                  <td className="p-3.5 text-[#7A5C77]">{c.location}</td>
-                  <td className="p-3.5 text-[#7A5C77]">{c.tenure_months}m</td>
-                  <td className="p-3.5 font-mono font-bold text-[#2D1E2F]">
-                    ₹{c.monthly_spend}
-                  </td>
-                  <td className="p-3.5 text-center font-mono">{c.support_tickets}</td>
-                  <td className="p-3.5 font-black font-mono text-[#2D1E2F]">{c.churn_probability}%</td>
-                  <td className="p-3.5">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                      c.risk_level === 'HIGH' ? 'bg-[#E65B7B]/15 text-[#E65B7B] border border-[#E65B7B]/30' :
-                      'bg-[#3BB28B]/15 text-[#3BB28B] border border-[#3BB28B]/30'
-                    }`}>
-                      {c.risk_level}
-                    </span>
-                  </td>
-                  <td className="p-3.5 text-[#2D1E2F]">{c.recommended_action}</td>
                 </tr>
-              ))}
+              ) : customers.length === 0 ? (
+                <tr>
+                  <td colSpan="11" className="p-8 text-center text-[#7A5C77] text-xs">
+                    No customer records found matching the current search & filters.
+                  </td>
+                </tr>
+              ) : (
+                customers.map((c, idx) => (
+                  <tr
+                    key={`${c.customerid}-${idx}`}
+                    onClick={() => onSelectCustomer && onSelectCustomer(c.customerid)}
+                    className="hover:bg-[#FBEFEF] cursor-pointer transition-colors"
+                  >
+                    <td className="p-3.5 font-mono text-[#7A5C77] font-bold">{c.customerid}</td>
+                    <td className="p-3.5 font-extrabold text-[#2D1E2F] capitalize">{c['customer name']}</td>
+                    <td className="p-3.5">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFE2E2] text-[#2D1E2F] border border-[#F5CBCB]">
+                        {c.plan_type}
+                      </span>
+                    </td>
+                    <td className="p-3.5 text-[#7A5C77]">{c.contract_type}</td>
+                    <td className="p-3.5 text-[#7A5C77]">{c.state}</td>
+                    <td className="p-3.5 font-mono font-bold text-[#2D1E2F]">
+                      ₹{typeof c.monthly_charges === 'number' ? c.monthly_charges.toFixed(2) : c.monthly_charges}
+                    </td>
+                    <td className="p-3.5 text-center">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        c.escalations === 'Y' ? 'bg-[#E65B7B]/15 text-[#E65B7B]' : 'bg-[#FFE2E2] text-[#7A5C77]'
+                      }`}>
+                        {c.escalations}
+                      </span>
+                    </td>
+                    <td className="p-3.5 font-black font-mono text-[#2D1E2F]">{c.churn_score}</td>
+                    <td className="p-3.5 font-black font-mono text-[#E65B7B]">{c.churn_probability}%</td>
+                    <td className="p-3.5">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        c.risk_level === 'HIGH' ? 'bg-[#E65B7B]/15 text-[#E65B7B] border border-[#E65B7B]/30' :
+                        c.risk_level === 'MEDIUM' ? 'bg-[#E69537]/15 text-[#E69537] border border-[#E69537]/30' :
+                        'bg-[#3BB28B]/15 text-[#3BB28B] border border-[#3BB28B]/30'
+                      }`}>
+                        {c.risk_level}
+                      </span>
+                    </td>
+                    <td className="p-3.5 text-[#2D1E2F] truncate max-w-xs">{c.recommended_action}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination Bar */}
+        <div className="p-4 bg-[#FFE2E2]/60 border-t border-[#F5CBCB] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold text-[#7A5C77]">
+          {/* Status info */}
+          <div>
+            Showing <span className="text-[#2D1E2F] font-mono">{startRecord}</span> to <span className="text-[#2D1E2F] font-mono">{endRecord}</span> of <span className="text-[#2D1E2F] font-mono">{totalCount.toLocaleString()}</span> customers
+          </div>
+
+          {/* Navigation Controls */}
+          <div className="flex items-center space-x-1.5">
+            {/* First Page */}
+            <button
+              onClick={() => setPage(1)}
+              disabled={page === 1 || loading}
+              className="p-2 rounded-lg bg-[#FFFFFF] border border-[#F5CBCB] disabled:opacity-40 hover:bg-[#FBEFEF] text-[#2D1E2F] transition-all cursor-pointer"
+              title="First Page"
+            >
+              <ChevronsLeft className="w-4 h-4" />
+            </button>
+
+            {/* Previous Page */}
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1 || loading}
+              className="p-2 rounded-lg bg-[#FFFFFF] border border-[#F5CBCB] disabled:opacity-40 hover:bg-[#FBEFEF] text-[#2D1E2F] transition-all cursor-pointer flex items-center gap-1"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Prev</span>
+            </button>
+
+            {/* Page Numbers */}
+            <div className="flex items-center space-x-1">
+              {getPageNumbers().map((pNum) => (
+                <button
+                  key={pNum}
+                  onClick={() => setPage(pNum)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-all cursor-pointer ${
+                    page === pNum
+                      ? 'bg-[#2D1E2F] text-[#FFFFFF]'
+                      : 'bg-[#FFFFFF] text-[#2D1E2F] border border-[#F5CBCB] hover:bg-[#FBEFEF]'
+                  }`}
+                >
+                  {pNum}
+                </button>
+              ))}
+            </div>
+
+            {/* Next Page */}
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages || loading}
+              className="p-2 rounded-lg bg-[#FFFFFF] border border-[#F5CBCB] disabled:opacity-40 hover:bg-[#FBEFEF] text-[#2D1E2F] transition-all cursor-pointer flex items-center gap-1"
+            >
+              <span className="hidden sm:inline">Next</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+
+            {/* Last Page */}
+            <button
+              onClick={() => setPage(totalPages)}
+              disabled={page === totalPages || loading}
+              className="p-2 rounded-lg bg-[#FFFFFF] border border-[#F5CBCB] disabled:opacity-40 hover:bg-[#FBEFEF] text-[#2D1E2F] transition-all cursor-pointer"
+              title="Last Page"
+            >
+              <ChevronsRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Direct Jump to Page Form */}
+          <form onSubmit={handleJumpPage} className="flex items-center space-x-2">
+            <span className="text-[11px] font-bold">Go to page:</span>
+            <input
+              type="number"
+              min="1"
+              max={totalPages}
+              value={jumpPageInput}
+              onChange={(e) => setJumpPageInput(e.target.value)}
+              placeholder={`${page}`}
+              className="w-14 px-2 py-1 bg-[#FFFFFF] border border-[#F5CBCB] rounded-lg font-mono font-bold text-center text-[#2D1E2F] focus:outline-none focus:border-[#C5B3D3]"
+            />
+            <button
+              type="submit"
+              className="px-2.5 py-1 bg-[#FFFFFF] border border-[#F5CBCB] hover:bg-[#FBEFEF] rounded-lg text-xs font-bold text-[#2D1E2F] cursor-pointer"
+            >
+              Go
+            </button>
+          </form>
         </div>
       </div>
     </div>

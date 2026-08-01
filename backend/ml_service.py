@@ -43,66 +43,50 @@ class MLService:
         Calculates local feature contributions (SHAP-style explainability) for a customer.
         Returns top positive (increasing churn risk) and negative (reducing churn risk) factors.
         """
-        # Baseline population averages for features
-        base_means = {
-            'login_frequency': 14.0,
-            'avg_session_duration': 24.0,
-            'support_tickets': 2.8,
-            'complaints': 0.8,
-            'payment_failures': 0.3,
-            'last_active_days': 12.0,
-            'customer_satisfaction': 3.8,
-            'tenure_months': 18.0,
-            'contract_length': '1 Year'
-        }
-        
         factors = []
         
-        # 1. Product Usage / Login Frequency impact
-        lf = customer_row.get('login_frequency', 14)
-        if lf < 6:
-            factors.append({'factor': 'Low Product Usage', 'impact': '+32%', 'direction': 'positive', 'score': 32})
-        elif lf > 22:
-            factors.append({'factor': 'High Product Usage', 'impact': '-18%', 'direction': 'negative', 'score': -18})
+        # 1. Contract Type impact
+        contract = customer_row.get('contract_type', 'Monthly')
+        if contract == 'Monthly':
+            factors.append({'factor': 'Month-to-Month Contract', 'impact': '+28%', 'direction': 'positive', 'score': 28})
+        elif contract == 'Annual':
+            factors.append({'factor': 'Annual Contract Commitment', 'impact': '-15%', 'direction': 'negative', 'score': -15})
             
-        # 2. Support Tickets & Complaints
-        tickets = customer_row.get('support_tickets', 0)
-        complaints = customer_row.get('complaints', 0)
-        if complaints >= 2 or tickets >= 4:
-            impact = 14 + complaints * 8 + tickets * 3
-            factors.append({'factor': f'High Support Tickets ({tickets}) & Complaints ({complaints})', 'impact': f'+{impact}%', 'direction': 'positive', 'score': impact})
-        elif tickets == 0:
-            factors.append({'factor': 'Zero Support Complaints', 'impact': '-8%', 'direction': 'negative', 'score': -8})
+        # 2. Plan Type
+        plan = customer_row.get('plan_type', 'Standard')
+        if plan == 'Basic':
+            factors.append({'factor': 'Basic Plan (High Drop-off Tier)', 'impact': '+22%', 'direction': 'positive', 'score': 22})
+        elif plan == 'Premium':
+            factors.append({'factor': 'Premium Plan (Strong Retention)', 'impact': '-18%', 'direction': 'negative', 'score': -18})
             
-        # 3. Inactivity
-        last_active = customer_row.get('last_active_days', 0)
-        if last_active > 15:
-            impact = min(35, 12 + int(last_active * 0.8))
-            factors.append({'factor': f'Recent Inactivity ({last_active} days)', 'impact': f'+{impact}%', 'direction': 'positive', 'score': impact})
-        elif last_active <= 3:
-            factors.append({'factor': 'Active Recently (<3 days)', 'impact': '-12%', 'direction': 'negative', 'score': -12})
+        # 3. Escalations
+        escalation = customer_row.get('escalations', 'N')
+        if escalation == 'Y':
+            factors.append({'factor': 'Active Escalation Ticket', 'impact': '+25%', 'direction': 'positive', 'score': 25})
+        else:
+            factors.append({'factor': 'No Escalation Issues', 'impact': '-8%', 'direction': 'negative', 'score': -8})
             
-        # 4. Contract Length & Subscription
-        contract = customer_row.get('contract_length', '1 Month')
-        if contract == '1 Month':
-            factors.append({'factor': 'Short Month-to-Month Contract', 'impact': '+16%', 'direction': 'positive', 'score': 16})
-        elif contract == '2 Year':
-            factors.append({'factor': 'Long-term 2-Year Contract', 'impact': '-22%', 'direction': 'negative', 'score': -22})
+        # 4. CSAT Score
+        csat = float(customer_row.get('csat_score', 50))
+        if csat < 30:
+            impact = int((50 - csat) * 0.5)
+            factors.append({'factor': f'Low CSAT Score ({csat:.1f}/100)', 'impact': f'+{impact}%', 'direction': 'positive', 'score': impact})
+        elif csat >= 70:
+            factors.append({'factor': f'High CSAT Score ({csat:.1f}/100)', 'impact': '-12%', 'direction': 'negative', 'score': -12})
             
-        # 5. Customer Satisfaction
-        csat = customer_row.get('customer_satisfaction', 3.8)
-        if csat < 3.0:
-            impact = int((3.5 - csat) * 14)
-            factors.append({'factor': f'Low CSAT Rating ({csat}/5.0)', 'impact': f'+{impact}%', 'direction': 'positive', 'score': impact})
-        elif csat >= 4.2:
-            impact = int((csat - 3.8) * 12)
-            factors.append({'factor': f'High CSAT Rating ({csat}/5.0)', 'impact': f'-{impact}%', 'direction': 'negative', 'score': -12})
+        # 5. Churn Score
+        churn_score = int(customer_row.get('churn_score', 50))
+        if churn_score >= 70:
+            factors.append({'factor': f'High Churn Risk Score ({churn_score})', 'impact': f'+{churn_score // 3}%', 'direction': 'positive', 'score': churn_score // 3})
+        elif churn_score < 20:
+            factors.append({'factor': f'Low Churn Risk Score ({churn_score})', 'impact': '-10%', 'direction': 'negative', 'score': -10})
             
-        # 6. Payment Failures
-        pf = customer_row.get('payment_failures', 0)
-        if pf >= 1:
-            impact = pf * 15
-            factors.append({'factor': f'Recent Payment Failures ({pf})', 'impact': f'+{impact}%', 'direction': 'positive', 'score': impact})
+        # 6. Cancellation Reason
+        reason = customer_row.get('cancellation_reason', '')
+        if reason == 'Too expensive':
+            factors.append({'factor': 'Price Sensitivity (Too Expensive)', 'impact': '+18%', 'direction': 'positive', 'score': 18})
+        elif reason == 'Switched to competitor':
+            factors.append({'factor': 'Competitive Loss Risk', 'impact': '+15%', 'direction': 'positive', 'score': 15})
             
         # Sort factors by magnitude
         factors.sort(key=lambda x: abs(x['score']), reverse=True)
@@ -114,58 +98,54 @@ class MLService:
         """
         if not self.xgb_model:
             self.load_artifacts()
-            
-        contract_map = {'1 Month': 1, '1 Year': 12, '2 Year': 24}
-        product_usage_map = {'Low': 1, 'Medium': 2, 'High': 3}
-        
-        sub = input_data.get('subscription_type', 'Pro')
-        contract = input_data.get('contract_length', '1 Month')
-        usage = input_data.get('product_usage', 'Medium')
-        
+
+        plan = input_data.get('plan_type', 'Standard')
+        contract = input_data.get('contract_type', 'Monthly')
+        sub_type = input_data.get('subscription_type', 'Organic')
+        escalation = input_data.get('escalations', 'N')
+        gender = input_data.get('gender', 'Male')
+
         row = {
-            'customer_age': float(input_data.get('customer_age', 35)),
+            'age': float(input_data.get('age', 30)),
             'tenure_months': float(input_data.get('tenure_months', 12)),
-            'monthly_spend': float(input_data.get('monthly_spend', 4500)),
-            'total_spend': float(input_data.get('monthly_spend', 4500)) * float(input_data.get('tenure_months', 12)),
-            'login_frequency': float(input_data.get('login_frequency', 14)),
-            'avg_session_duration': float(input_data.get('avg_session_duration', 20)),
-            'support_tickets': float(input_data.get('support_tickets', 2)),
-            'complaints': float(input_data.get('complaints', 0)),
-            'payment_failures': float(input_data.get('payment_failures', 0)),
-            'discount_usage': float(input_data.get('discount_usage', 0)),
-            'last_active_days': float(input_data.get('last_active_days', 5)),
-            'customer_satisfaction': float(input_data.get('customer_satisfaction', 3.8)),
-            'previous_upgrades': float(input_data.get('previous_upgrades', 0)),
-            'previous_downgrades': float(input_data.get('previous_downgrades', 0)),
-            'contract_months': float(contract_map.get(contract, 1)),
-            'product_usage_score': float(product_usage_map.get(usage, 2)),
-            'sub_Basic': 1.0 if sub == 'Basic' else 0.0,
-            'sub_Pro': 1.0 if sub == 'Pro' else 0.0,
-            'sub_Enterprise': 1.0 if sub == 'Enterprise' else 0.0
+            'monthly_charges': float(input_data.get('monthly_charges', 15)),
+            'cltv': float(input_data.get('cltv', 640)),
+            'churn_score': float(input_data.get('churn_score', 34)),
+            'csat_score': float(input_data.get('csat_score', 50)),
+            'complaint_count': float(input_data.get('complaint_count', 1.0)),
+            'contract_monthly': 1.0 if contract == 'Monthly' else 0.0,
+            'escalation_flag': 1.0 if escalation == 'Y' else 0.0,
+            'gender_male': 1.0 if gender == 'Male' else 0.0,
+            'plan_Basic': 1.0 if plan == 'Basic' else 0.0,
+            'plan_Standard': 1.0 if plan == 'Standard' else 0.0,
+            'plan_Premium': 1.0 if plan == 'Premium' else 0.0,
+            'sub_type_Organic': 1.0 if sub_type == 'Organic' else 0.0,
+            'sub_type_Paid': 1.0 if sub_type == 'Paid' else 0.0,
+            'sub_type_Refferal': 1.0 if sub_type == 'Refferal' else 0.0
         }
-        
+
         df_feat = pd.DataFrame([row])[self.feature_cols]
-        
+
         prob = float(self.xgb_model.predict_proba(df_feat)[0, 1]) * 100
         prob = round(min(max(prob, 1.0), 99.0), 1)
-        
+
         risk_level = 'LOW' if prob <= 30 else ('MEDIUM' if prob <= 70 else 'HIGH')
-        
-        monthly_spend = float(input_data.get('monthly_spend', 4500))
-        rev_at_risk = round(monthly_spend * 12 * (prob / 100), 2)
-        
-        csat = float(input_data.get('customer_satisfaction', 3.8))
-        health_score = int(np.clip(round(100 - prob * 0.7 + (csat - 3.0) * 6), 5, 99))
-        
+
+        monthly_charges = float(input_data.get('monthly_charges', 15))
+        rev_at_risk = round(monthly_charges * 12 * (prob / 100), 2)
+
+        csat = float(input_data.get('csat_score', 50))
+        health_score = int(np.clip(round(100 - prob * 0.7 + (csat / 100 - 0.5) * 20), 5, 99))
+
         # Calculate retention recommendation
         rec_data = input_data.copy()
         rec_data['churn_probability'] = prob
-        
+
         from scripts.train_ml_pipeline import get_recommendation
         recommendation = get_recommendation(rec_data)
-        
+
         shap_factors = self.calculate_shap_factors(input_data)
-        
+
         return {
             'churn_probability': prob,
             'risk_level': risk_level,

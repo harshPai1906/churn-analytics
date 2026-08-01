@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Users, UserX, TrendingDown, ShieldCheck } from 'lucide-react';
 
 export default function KpiCardsSection({ metrics }) {
-  const totalCust = metrics?.totalCustomers || 21;
-  const churnedCust = metrics?.churnedCustomers || 6;
-  const churnRate = metrics?.churnRate !== undefined ? metrics.churnRate : 28.57;
-  const retentionRate = metrics?.retentionRate !== undefined ? metrics.retentionRate : 71.43;
+  const totalCust = metrics?.totalCustomers || 25000;
+  const churnedCust = metrics?.churnedCustomers || 9904;
+  const churnRate = metrics?.churnRate !== undefined ? metrics.churnRate : 39.62;
+  const retentionRate = metrics?.retentionRate !== undefined ? metrics.retentionRate : 60.38;
 
   const [animatedValues, setAnimatedValues] = useState({
     total: 0,
@@ -48,21 +48,21 @@ export default function KpiCardsSection({ metrics }) {
     {
       id: 'total',
       title: 'Total Customers',
-      value: animatedValues.total,
+      value: animatedValues.total.toLocaleString(),
       suffix: '',
-      subtext: 'Analyzed customer cohort',
+      subtext: 'Full generated dataset',
       icon: Users,
       color: 'text-[#7A5C77]',
       border: 'hover:border-[#C5B3D3]',
-      badge: 'Sample Cohort',
+      badge: '25,000 Records',
       badgeColor: 'bg-[#FFE2E2] text-[#2D1E2F]'
     },
     {
       id: 'churned',
       title: 'Churned Customers',
-      value: animatedValues.churned,
+      value: animatedValues.churned.toLocaleString(),
       suffix: '',
-      subtext: 'Cancellations identified',
+      subtext: 'Predicted cancellations',
       icon: UserX,
       color: 'text-[#E65B7B]',
       border: 'hover:border-[#E65B7B]',
@@ -74,11 +74,11 @@ export default function KpiCardsSection({ metrics }) {
       title: 'Churn Rate',
       value: animatedValues.churnRate,
       suffix: '%',
-      subtext: 'Monthly customer churn percentage',
+      subtext: 'Overall churn percentage',
       icon: TrendingDown,
       color: 'text-[#E65B7B]',
       border: 'hover:border-[#E65B7B]',
-      badge: '28.57% Baseline',
+      badge: `${churnRate}% Baseline`,
       badgeColor: 'bg-[#E65B7B]/15 text-[#E65B7B]'
     },
     {
@@ -90,7 +90,7 @@ export default function KpiCardsSection({ metrics }) {
       icon: ShieldCheck,
       color: 'text-[#3BB28B]',
       border: 'hover:border-[#3BB28B]',
-      badge: '71.43% Retained',
+      badge: `${retentionRate}% Retained`,
       badgeColor: 'bg-[#3BB28B]/15 text-[#3BB28B]'
     }
   ];

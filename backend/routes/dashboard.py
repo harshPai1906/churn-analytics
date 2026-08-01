@@ -15,10 +15,10 @@ def get_dashboard_summary():
         return {"error": "Dataset not initialized"}
         
     total_customers = len(df)
-    churn_rate = round(float(df['churn'].mean() * 100), 1)
+    churn_rate = round(float(df['churn_flag'].mean() * 100), 1)
     rev_at_risk = round(float(df['revenue_at_risk'].sum()), 2)
     high_risk_count = int((df['risk_level'] == 'HIGH').sum())
-    clv = round(float(df['total_spend'].mean()), 2)
+    clv = round(float(df['cltv'].mean()), 2)
     
     # 12-Month Churn Trend (Realistic historical curve)
     base_churn = churn_rate
@@ -46,35 +46,40 @@ def get_dashboard_summary():
         {"name": "High Risk (71-100%)", "value": high_risk, "color": "#f43f5e"}
     ]
     
-    # Churn by Subscription Plan
+    # Churn by Plan Type
     plan_stats = []
-    for plan in ["Basic", "Pro", "Enterprise"]:
-        sub_df = df[df['subscription_type'] == plan]
-        plan_stats.append({
-            "plan": plan,
-            "total": len(sub_df),
-            "churned": int(sub_df['churn'].sum()),
-            "churn_rate": round(float(sub_df['churn'].mean() * 100), 1),
-            "revenue_at_risk": round(float(sub_df['revenue_at_risk'].sum()), 2)
-        })
+    for plan in ["Basic", "Standard", "Premium"]:
+        sub_df = df[df['plan_type'] == plan]
+        if len(sub_df) > 0:
+            plan_stats.append({
+                "plan": plan,
+                "total": len(sub_df),
+                "churned": int(sub_df['churn_flag'].sum()),
+                "churn_rate": round(float(sub_df['churn_flag'].mean() * 100), 1),
+                "revenue_at_risk": round(float(sub_df['revenue_at_risk'].sum()), 2)
+            })
         
-    # Churn by Customer Tenure
-    tenure_brackets = [
-        ("0–6 months", df['tenure_months'] <= 6),
-        ("6–12 months", (df['tenure_months'] > 6) & (df['tenure_months'] <= 12)),
-        ("1–2 years", (df['tenure_months'] > 12) & (df['tenure_months'] <= 24)),
-        ("2+ years", df['tenure_months'] > 24)
-    ]
-    
-    tenure_stats = []
-    for label, mask in tenure_brackets:
-        t_df = df[mask]
-        tenure_stats.append({
-            "tenure": label,
-            "total": len(t_df),
-            "churn_rate": round(float(t_df['churn'].mean() * 100), 1),
-            "avg_health_score": round(float(t_df['health_score'].mean()), 1)
+    # Churn by Contract Type
+    contract_stats = []
+    for contract in ["Monthly", "Annual"]:
+        c_df = df[df['contract_type'] == contract]
+        if len(c_df) > 0:
+            contract_stats.append({
+                "contract": contract,
+                "total": len(c_df),
+                "churned": int(c_df['churn_flag'].sum()),
+                "churn_rate": round(float(c_df['churn_flag'].mean() * 100), 1)
+            })
+
+    # Churn by State
+    state_stats = []
+    for state, s_df in df.groupby('state'):
+        state_stats.append({
+            "state": state,
+            "total": len(s_df),
+            "churn_rate": round(float(s_df['churn_flag'].mean() * 100), 1)
         })
+    state_stats.sort(key=lambda x: x['churn_rate'], reverse=True)
         
     # Recent Risk Alerts
     recent_alerts = [
@@ -82,23 +87,23 @@ def get_dashboard_summary():
             "id": 1,
             "type": "warning",
             "title": "High-Value Account Shift",
-            "description": f"127 high-value Pro & Enterprise accounts crossed into the >70% churn risk threshold this week.",
-            "impact": "₹3.4M ARR Risk",
+            "description": f"{high_risk_count} accounts crossed into the >70% churn risk threshold.",
+            "impact": f"₹{rev_at_risk/1e3:.1f}K ARR Risk",
             "timestamp": "2 hours ago"
         },
         {
             "id": 2,
             "type": "danger",
-            "title": "Basic Plan Churn Spike",
-            "description": "Churn rate increased 3.2% among Basic plan users following recent onboarding friction.",
-            "impact": "+184 Churned Users",
+            "title": "Monthly Contract Churn Spike",
+            "description": "Churn rate among month-to-month subscribers is significantly elevated.",
+            "impact": f"+{int(df[df['contract_type']=='Monthly']['churn_flag'].sum())} Churned",
             "timestamp": "5 hours ago"
         },
         {
             "id": 3,
             "type": "info",
             "title": "Revenue Protection Opportunity",
-            "description": f"₹{rev_at_risk/1e6:.1f}M annual recurring revenue is currently at risk across {high_risk_count:,} accounts.",
+            "description": f"₹{rev_at_risk/1e3:.1f}K annual recurring revenue is currently at risk across {high_risk_count:,} accounts.",
             "impact": "Action Required",
             "timestamp": "1 day ago"
         }
@@ -115,7 +120,8 @@ def get_dashboard_summary():
         "churn_trend": churn_trend,
         "revenue_at_risk_trend": monthly_rev_trend,
         "risk_distribution": risk_distribution,
-        "churn_by_subscription": plan_stats,
-        "churn_by_tenure": tenure_stats,
+        "churn_by_plan": plan_stats,
+        "churn_by_contract": contract_stats,
+        "churn_by_state": state_stats,
         "recent_alerts": recent_alerts
     }
