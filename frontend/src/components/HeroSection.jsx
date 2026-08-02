@@ -14,19 +14,19 @@ export default function HeroSection({ onExploreClick }) {
   };
 
   return (
-    <section id="hero-section" className="relative py-20 md:py-28 px-4 md:px-8 bg-mesh-pattern overflow-hidden border-b border-[#F5CBCB]">
+    <section id="hero-section" className="relative py-12 md:py-28 px-4 md:px-8 bg-mesh-pattern overflow-hidden border-b border-[#F5CBCB]">
       {/* Soft Ambient Floating Background Light Waves */}
-      <div className="absolute -top-16 left-1/4 w-[550px] h-[550px] bg-[#C5B3D3]/30 rounded-full blur-3xl pointer-events-none animate-float-slow" />
-      <div className="absolute top-1/3 right-1/4 w-[500px] h-[500px] bg-[#FFE2E2]/70 rounded-full blur-3xl pointer-events-none animate-float-slow" style={{ animationDelay: '4s' }} />
+      <div className="absolute -top-16 left-1/4 w-[350px] sm:w-[550px] h-[350px] sm:h-[550px] bg-[#C5B3D3]/30 rounded-full blur-3xl pointer-events-none animate-float-slow" />
+      <div className="absolute top-1/3 right-1/4 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-[#FFE2E2]/70 rounded-full blur-3xl pointer-events-none animate-float-slow" style={{ animationDelay: '4s' }} />
 
-      <div className="max-w-6xl mx-auto text-center relative z-10 space-y-8 animate-fade-in">
+      <div className="max-w-6xl mx-auto text-center relative z-10 space-y-6 sm:space-y-8 animate-fade-in">
         {/* Extra Big Title */}
-        <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight text-[#2D1E2F] leading-none pt-2">
+        <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-[#2D1E2F] leading-tight sm:leading-none pt-2">
           Customer Churn Analytics
         </h1>
 
         {/* Subtitle */}
-        <p className="text-lg md:text-2xl text-[#7A5C77] max-w-3xl mx-auto font-medium leading-relaxed">
+        <p className="text-sm sm:text-lg md:text-2xl text-[#7A5C77] max-w-3xl mx-auto font-medium leading-relaxed">
           Turning customer data into actionable retention insights using Python, Pandas, and interactive visualization.
         </p>
 

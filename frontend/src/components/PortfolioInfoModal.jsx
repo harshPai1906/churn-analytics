@@ -29,7 +29,7 @@ export default function PortfolioInfoModal({ isOpen, onClose }) {
         </div>
 
         {/* Tab Selector */}
-        <div className="flex border-b border-palette-800 bg-palette-950/30 px-6 gap-4 text-xs font-medium">
+        <div className="flex border-b border-palette-800 bg-palette-950/30 px-4 sm:px-6 gap-3 sm:gap-4 text-xs font-medium overflow-x-auto">
           {[
             { id: 'ds-skills', label: 'Data Science Skills', icon: Cpu },
             { id: 'sql-analysis', label: 'SQL Analytical Queries', icon: Database },

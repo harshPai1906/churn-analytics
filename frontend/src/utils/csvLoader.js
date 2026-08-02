@@ -79,7 +79,7 @@ export async function loadStaticCsvCustomers() {
       if (lines.length <= 1) return [];
 
       const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-      
+
       const parsed = [];
       for (let i = 1; i < lines.length; i++) {
         // Handle CSV split respecting basic quotes

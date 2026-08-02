@@ -81,7 +81,7 @@ export default function CustomerDetailModal({ customerId, onClose }) {
         ) : customer ? (
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Top Score Cards */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               {/* Health Score */}
               <div className="p-4 rounded-xl bg-[#FFE2E2] border border-[#F5CBCB] flex flex-col justify-between shadow-sm">
                 <div className="flex items-center justify-between text-[#7A5C77] text-[11px] font-bold">
@@ -165,7 +165,7 @@ export default function CustomerDetailModal({ customerId, onClose }) {
             </div>
 
             {/* Customer Details Grid */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="p-4 rounded-xl bg-[#FFE2E2]/50 border border-[#F5CBCB] space-y-2 text-xs">
                 <h5 className="font-extrabold text-[#2D1E2F] border-b border-[#F5CBCB] pb-2">Subscription Details</h5>
                 <div className="flex justify-between py-1 border-b border-[#F5CBCB]/60">

@@ -16,6 +16,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-[#FBEFEF] text-[#2D1E2F] font-sans">
@@ -24,6 +25,8 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         openPortfolioModal={() => setIsPortfolioModalOpen(true)}
+        isMobileMenuOpen={isMobileMenuOpen}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
       />
 
       {/* Main Content Area */}
@@ -32,6 +35,8 @@ export default function App() {
         <TopNav
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          isMobileMenuOpen={isMobileMenuOpen}
+          setIsMobileMenuOpen={setIsMobileMenuOpen}
         />
 
         {/* View Component Renderer */}

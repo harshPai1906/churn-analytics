@@ -1,6 +1,12 @@
 import React from 'react';
+import { Menu, X } from 'lucide-react';
 
-export default function TopNav({ activeTab, setActiveTab }) {
+export default function TopNav({ 
+  activeTab, 
+  setActiveTab,
+  isMobileMenuOpen,
+  setIsMobileMenuOpen
+}) {
   const scrollToSection = (sectionId, tabName = 'dashboard') => {
     if (setActiveTab) setActiveTab(tabName);
     setTimeout(() => {
@@ -12,9 +18,18 @@ export default function TopNav({ activeTab, setActiveTab }) {
   };
 
   return (
-    <header className="h-16 bg-[#FBEFEF]/90 backdrop-blur-md border-b border-[#F5CBCB] px-4 md:px-8 flex items-center justify-between sticky top-0 z-50 transition-all">
-      {/* Brand & Status Indicator */}
-      <div className="flex items-center space-x-4 md:space-x-6">
+    <header className="h-16 bg-[#FBEFEF]/90 backdrop-blur-md border-b border-[#F5CBCB] px-3 sm:px-6 md:px-8 flex items-center justify-between sticky top-0 z-40 transition-all">
+      {/* Left: Mobile Menu Toggle & Brand Logo */}
+      <div className="flex items-center space-x-3 sm:space-x-4 md:space-x-6">
+        {/* Mobile Hamburger Toggle Button */}
+        <button
+          onClick={() => setIsMobileMenuOpen && setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="lg:hidden p-2 rounded-xl text-[#2D1E2F] hover:bg-[#FFE2E2] border border-[#F5CBCB] focus:outline-none transition-colors"
+          aria-label="Toggle navigation menu"
+        >
+          {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+
         <button 
           onClick={() => scrollToSection('hero-section', 'dashboard')}
           className="flex items-center space-x-2 text-left group focus:outline-none"
@@ -22,7 +37,7 @@ export default function TopNav({ activeTab, setActiveTab }) {
           <div className="w-8 h-8 rounded-lg bg-[#FFFFFF] border border-[#F5CBCB] p-0.5 shadow-md group-hover:scale-105 transition-transform flex items-center justify-center">
             <img src="/logo.png" alt="Churn Analytics Logo" className="w-full h-full object-contain" />
           </div>
-          <span className="text-base font-extrabold tracking-tight text-[#2D1E2F]">
+          <span className="text-sm sm:text-base font-extrabold tracking-tight text-[#2D1E2F]">
             Churn Analytics
           </span>
         </button>
